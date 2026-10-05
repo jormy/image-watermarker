@@ -1,122 +1,124 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useEffect, useRef } from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+
+  const addFiles = (newFiles: File[]) => {
+    const imageFiles = newFiles.filter((file) =>
+      file.type.startsWith("image/"),
+    );
+
+    setFiles((currentFiles) => [...currentFiles, ...imageFiles]);
+  };
+
+  useEffect(() => {
+    const urls = files.map((file) => URL.createObjectURL(file));
+
+    setPreviews(urls);
+
+    return () => {
+      urls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [files]);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!files[0] || !canvasRef.current) {
+      return;
+    }
+
+    const canvas = canvasRef.current;
+
+    const processImage = async () => {
+      const image = await createImageBitmap(files[0]);
+
+      const ctx = canvas.getContext("2d");
+
+      if (!ctx) {
+        return;
+      }
+
+      canvas.width = image.width;
+      canvas.height = image.height;
+
+      ctx.drawImage(image, 0, 0);
+      ctx.font = "bold 64px sans-serif";
+      ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+      ctx.fillText("MY WATERMARK", 50, 100);
+
+      image.close();
+    };
+
+    processImage();
+  }, [files]);
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <main className="absolute inset-0 min-h-screen w-screen overflow-auto bg-zinc-950 text-white">
+      <div className="mx-auto max-w-5xl px-6 py-16 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
+          <h1 className="text-4xl font-semibold tracking-tight">
+            Image Watermarker
+          </h1>
+
+          <p className="mt-2 text-zinc-400">
+            Watermark your images directly in your browser.
           </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
 
-      <div className="ticks"></div>
+          <label
+            onDragOver={(event) => {
+              event.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => {
+              setIsDragging(false);
+            }}
+            onDrop={(event) => {
+              event.preventDefault();
+              setIsDragging(false);
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+              const droppedFiles = Array.from(event.dataTransfer.files);
+              addFiles(droppedFiles);
+            }}
+            className={`mt-6 flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-colors ${isDragging ? "border-white bg-white/10" : "border-zinc-700 bg-zinc-900/50"}`}
+          >
+            <input
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(event) => {
+                const selectedFiles = Array.from(event.target.files ?? []);
+                addFiles(selectedFiles);
+              }}
+            />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+            <p className="font-medium">
+              {isDragging ? "Drop your images here" : "Drag & drop your images"}
+            </p>
+
+            <p className="mt-1 text-sm text-zinc-500">or click to browse</p>
+          </label>
+          <p className="mt-2 text-zinc-400">{files.length} file(s) selected.</p>
+          <canvas ref={canvasRef} className="mt-6 w-full rounded-xl" />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
+          {previews.map((preview, index) => (
+            <div key={files[index].name}>
+              <img
+                src={preview}
+                alt={files[index].name}
+                className="aspect-auto w-full rounded-xl object-cover"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
 }
 
-export default App
+export default App;
