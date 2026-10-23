@@ -14,6 +14,9 @@ function App() {
   const marginGuideTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
+  const [thumbnailHeight, setThumbnailHeight] = useState(144);
+  const [isResizing, setIsResizing] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const handleMarginChange = (value: number) => {
     setMargin(value);
@@ -58,14 +61,16 @@ function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (!files[0] || !canvasRef.current) {
+    const selectedFile = files[selectedIndex];
+
+    if (!selectedFile || !canvasRef.current) {
       return;
     }
 
     const canvas = canvasRef.current;
 
     const processImage = async () => {
-      const image = await createImageBitmap(files[0]);
+      const image = await createImageBitmap(selectedFile);
 
       const ctx = canvas.getContext("2d");
 
@@ -116,6 +121,7 @@ function App() {
 
     processImage();
   }, [
+    selectedIndex,
     files,
     watermarkText,
     fontSize,
@@ -126,8 +132,8 @@ function App() {
   ]);
 
   return (
-    <main className="absolute inset-0 min-h-screen w-screen overflow-auto bg-zinc-950 text-white">
-      <div className="mx-auto max-w-5xl px-6 py-16 grid grid-cols-2 sm:grid-cols-1 md:grid-cols-2 gap-6">
+    <main className="flex h-dvh w-screen overflow-hidden bg-zinc-950 text-white">
+      <aside className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-zinc-800 p-6">
         <div>
           <h1 className="text-4xl font-semibold tracking-tight">
             Image Watermarker
@@ -231,7 +237,7 @@ function App() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">
+              <label className="mb-2 block text-md font-medium">
                 Margin: {margin}%
               </label>
 
@@ -249,7 +255,7 @@ function App() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Position</label>
+              <label className="mb-2 block text-md font-medium">Position</label>
 
               <div className="grid w-fit grid-cols-3 gap-2">
                 {[
@@ -281,39 +287,101 @@ function App() {
               </div>
             </div>
           </div>
+        </div>
+      </aside>
 
-          <div className="relative mt-6 w-full overflow-hidden outline-1 outline-zinc-700">
-            <canvas ref={canvasRef} className="w-full block h-auto" />
+      <section
+        className={`flex min-h-0 min-w-0 flex-1 flex-col ${
+          isResizing ? "select-none" : ""
+        }`}
+      >
+        {/* Main image preview */}
+        <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-6">
+          <canvas
+            ref={canvasRef}
+            className="block max-h-full max-w-full object-contain"
+          />
 
+          {/* Margin guide */}
+          <div
+            className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${
+              showMarginGuide ? "opacity-100" : "opacity-0"
+            }`}
+            aria-hidden="true"
+          >
             <div
-              className={`pointer-events-none absolute inset-0 transition-opacity duration-300 ${showMarginGuide ? "opacity-100" : "opacity-0"}`}
-              aria-hidden="true"
-            >
-              <div
-                className="absolute border border-dashed border-white/70"
-                style={{
-                  left: `${margin}%`,
-                  right: `${margin}%`,
-                  top: `${margin}%`,
-                  bottom: `${margin}%`,
-                }}
-              />
-            </div>
+              className="absolute border border-dashed border-white/70"
+              style={{
+                left: `${margin}%`,
+                right: `${margin}%`,
+                top: `${margin}%`,
+                bottom: `${margin}%`,
+              }}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4">
+        {/* Resizable divider */}
+        <div
+          role="separator"
+          aria-label="Resize thumbnail panel"
+          aria-orientation="horizontal"
+          aria-valuenow={thumbnailHeight}
+          aria-valuemin={112}
+          aria-valuemax={Math.min(480, window.innerHeight * 0.65)}
+          tabIndex={0}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            setIsResizing(true);
+          }}
+          onPointerMove={(event) => {
+            if (!isResizing) return;
+
+            const section = event.currentTarget.parentElement;
+            if (!section) return;
+
+            const bounds = section.getBoundingClientRect();
+            const maxHeight = Math.min(480, bounds.height * 0.65);
+            const newHeight = bounds.bottom - event.clientY;
+
+            setThumbnailHeight(Math.max(112, Math.min(maxHeight, newHeight)));
+          }}
+          onPointerUp={() => setIsResizing(false)}
+          onPointerCancel={() => setIsResizing(false)}
+          className="group relative z-10 flex h-3 shrink-0 cursor-row-resize items-center justify-center border-t border-zinc-800 bg-zinc-950"
+        >
+          <div
+            className={`h-1 w-12 rounded-full transition-colors ${
+              isResizing ? "bg-accent" : "bg-zinc-700 group-hover:bg-accent"
+            }`}
+          />
+        </div>
+
+        {/* Thumbnail panel */}
+        <div
+          style={{ height: thumbnailHeight }}
+          className="flex shrink-0 items-center gap-4 overflow-x-auto overflow-y-hidden px-6 py-3"
+        >
           {previews.map((preview, index) => (
-            <div key={files[index].name}>
+            <button
+              type="button"
+              onClick={() => setSelectedIndex(index)}
+              key={files[index].name}
+              className={`h-full shrink-0 cursor-pointer overflow-hidden rounded-lg ring-2 transition ring-offset-4 ring-offset-zinc-950 ${
+                selectedIndex === index
+                  ? "ring-accent"
+                  : "ring-transparent hover:ring-zinc-600 hover:ring-4 hover:ring-offset-0"
+              }`}
+            >
               <img
                 src={preview}
                 alt={files[index].name}
-                className="aspect-auto w-full rounded-xl object-cover"
+                className="h-full w-auto object-contain"
               />
-            </div>
+            </button>
           ))}
         </div>
-      </div>
+      </section>
     </main>
   );
 }
