@@ -13,21 +13,18 @@ type RenderWatermarkOptions = {
 function renderWatermark({
   canvas,
   image,
-  maxDimension,
   watermarkText,
   fontSize,
   opacity,
   watermarkColor,
   position,
   margin,
+  maxDimension = 1600,
 }: RenderWatermarkOptions) {
   const context = canvas.getContext("2d");
   if (!context) return;
 
-  const scale = Math.min(
-    1,
-    (maxDimension ?? Infinity) / Math.max(image.width, image.height),
-  );
+  const scale = Math.min(1, maxDimension / Math.max(image.width, image.height));
 
   canvas.width = Math.round(scale * image.width);
   canvas.height = Math.round(scale * image.height);

@@ -5,11 +5,13 @@ import ThumbnailStrip from "./components/ThumbnailStrip";
 import type { WatermarkSettings } from "./types/watermark";
 import Toolbar from "./components/Toolbar";
 import createThumbnail from "./lib/createThumbnail";
+import createPreview from "./lib/createPreview";
 
 function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const thumbnailCache = useRef(new Map<File, string>());
+  const previewCache = useRef(new Map<File, ImageBitmap>());
   const [watermarkSettings, setWatermarkSettings] = useState<WatermarkSettings>(
     {
       type: "text",
@@ -73,10 +75,16 @@ function App() {
     if (!file) return;
 
     const thumbnailUrl = thumbnailCache.current.get(file);
+    const preview = previewCache.current.get(file);
 
     if (thumbnailUrl) {
       URL.revokeObjectURL(thumbnailUrl);
       thumbnailCache.current.delete(file);
+    }
+
+    if (preview) {
+      preview.close();
+      previewCache.current.delete(file);
     }
 
     setFiles((current) => current.filter((_, i) => i !== index));
@@ -93,33 +101,46 @@ function App() {
   useEffect(() => {
     let cancelled = false;
 
-    const generateThumbnails = async () => {
+    const generateImageAssets = async () => {
       const cache = thumbnailCache.current;
+      const previews = previewCache.current;
 
       try {
         for (const file of files) {
           if (cancelled) return;
-          if (cache.has(file)) continue;
 
-          const url = await createThumbnail(file);
+          if (!cache.has(file)) {
+            const url = await createThumbnail(file);
 
-          if (cancelled) {
-            URL.revokeObjectURL(url);
-            return;
+            if (cancelled) {
+              URL.revokeObjectURL(url);
+              return;
+            }
+
+            cache.set(file, url);
           }
 
-          cache.set(file, url);
+          if (!previews.has(file)) {
+            const preview = await createPreview(file);
+
+            if (cancelled) {
+              preview.close();
+              return;
+            }
+
+            previews.set(file, preview);
+          }
         }
 
         if (!cancelled) {
           setPreviews(files.map((file) => cache.get(file) ?? ""));
         }
       } catch (error) {
-        console.error("Failed to generate thumbnails:", error);
+        console.error("Failed to generate image assets:", error);
       }
     };
 
-    void generateThumbnails();
+    void generateImageAssets();
 
     return () => {
       cancelled = true;
@@ -132,6 +153,11 @@ function App() {
         URL.revokeObjectURL(url);
       });
       thumbnailCache.current.clear();
+
+      previewCache.current.forEach((preview) => {
+        preview.close();
+      });
+      previewCache.current.clear();
     };
   }, []);
 
@@ -156,7 +182,11 @@ function App() {
           selectedIndex={selectedIndex}
         />
         <ImagePreview
-          file={files[selectedIndex]}
+          image={
+            files[selectedIndex]
+              ? (previewCache.current.get(files[selectedIndex]) ?? undefined)
+              : undefined
+          }
           settings={watermarkSettings}
           showMarginGuide={showMarginGuide}
         />
