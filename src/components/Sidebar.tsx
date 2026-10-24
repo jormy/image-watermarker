@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { WatermarkPosition, WatermarkSettings } from "../types/watermark";
 import {
   FiCrosshair,
   FiArrowUp,
@@ -13,22 +14,12 @@ import {
 
 type SidebarProps = {
   fileCount: number;
-  watermarkText: string;
-  fontSize: number;
-  opacity: number;
-  watermarkColor: string;
-  margin: number;
-  position: string;
+  settings: WatermarkSettings;
   onAddFiles: (files: File[]) => void;
-  onWatermarkTextChange: (value: string) => void;
-  onFontSizeChange: (value: number) => void;
-  onOpacityChange: (value: number) => void;
-  onWatermarkColorChange: (value: string) => void;
-  onMarginChange: (value: number) => void;
-  onPositionChange: (value: string) => void;
+  onWatermarkChange: (updates: Partial<WatermarkSettings>) => void;
 };
 
-const positions = [
+const positions: { value: WatermarkPosition; icon: typeof FiCrosshair }[] = [
   { value: "top-left", icon: FiArrowUpLeft },
   { value: "top-center", icon: FiArrowUp },
   { value: "top-right", icon: FiArrowUpRight },
@@ -42,19 +33,9 @@ const positions = [
 
 function Sidebar({
   fileCount,
-  watermarkText,
-  fontSize,
-  opacity,
-  watermarkColor,
-  margin,
-  position,
+  settings,
   onAddFiles,
-  onWatermarkTextChange,
-  onFontSizeChange,
-  onOpacityChange,
-  onWatermarkColorChange,
-  onMarginChange,
-  onPositionChange,
+  onWatermarkChange,
 }: SidebarProps) {
   const [isDragging, setIsDragging] = useState(false);
 
@@ -102,34 +83,40 @@ function Sidebar({
             </label>
             <input
               type="text"
-              value={watermarkText}
-              onChange={(event) => onWatermarkTextChange(event.target.value)}
+              value={settings.text}
+              onChange={(event) =>
+                onWatermarkChange({ text: event.target.value })
+              }
               className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
             />
           </div>
           <div>
             <label className="mb-2 block text-md font-medium">
-              Font Size: {fontSize}px
+              Font Size: {settings.fontSize}px
             </label>
             <input
               type="range"
               min="10"
               max="200"
-              value={fontSize}
-              onChange={(event) => onFontSizeChange(Number(event.target.value))}
+              value={settings.fontSize}
+              onChange={(event) =>
+                onWatermarkChange({ fontSize: Number(event.target.value) })
+              }
               className="w-full accent-accent"
             />
           </div>
           <div>
             <label className="mb-2 block text-md font-medium">
-              Opacity: {opacity}%
+              Opacity: {settings.opacity}%
             </label>
             <input
               type="range"
               min="0"
               max="100"
-              value={opacity}
-              onChange={(event) => onOpacityChange(Number(event.target.value))}
+              value={settings.opacity}
+              onChange={(event) =>
+                onWatermarkChange({ opacity: Number(event.target.value) })
+              }
               className="w-full accent-accent"
             />
           </div>
@@ -139,22 +126,26 @@ function Sidebar({
             </label>
             <input
               type="color"
-              value={watermarkColor}
-              onChange={(event) => onWatermarkColorChange(event.target.value)}
+              value={settings.color}
+              onChange={(event) =>
+                onWatermarkChange({ color: event.target.value })
+              }
               className="h-10 w-14 cursor-pointer rounded border-0 bg-transparent"
             />
           </div>
           <div>
             <label className="mb-2 block text-md font-medium">
-              Margin: {margin}%
+              Margin: {settings.margin}%
             </label>
             <input
               type="range"
               min="0"
               max="15"
               step="0.5"
-              value={margin}
-              onChange={(event) => onMarginChange(Number(event.target.value))}
+              value={settings.margin}
+              onChange={(event) =>
+                onWatermarkChange({ margin: Number(event.target.value) })
+              }
               className="w-full accent-accent"
             />
           </div>
@@ -165,10 +156,10 @@ function Sidebar({
                 <button
                   key={item.value}
                   type="button"
-                  onClick={() => onPositionChange(item.value)}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${position === item.value ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
+                  onClick={() => onWatermarkChange({ position: item.value })}
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${settings.position === item.value ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
                   aria-label={item.value}
-                  aria-pressed={position === item.value}
+                  aria-pressed={settings.position === item.value}
                 >
                   <item.icon size={18} />
                 </button>

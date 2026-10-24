@@ -1,27 +1,14 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import useWatermarkCanvas from "../hooks/useWatermarkCanvas";
+import type { WatermarkSettings } from "../types/watermark";
 
 type ImagePreviewProps = {
   file: File | undefined;
-  watermarkText: string;
-  fontSize: number;
-  opacity: number;
-  watermarkColor: string;
-  position: string;
-  margin: number;
+  settings: WatermarkSettings;
   showMarginGuide: boolean;
 };
 
-function ImagePreview({
-  file,
-  watermarkText,
-  fontSize,
-  opacity,
-  watermarkColor,
-  position,
-  margin,
-  showMarginGuide,
-}: ImagePreviewProps) {
+function ImagePreview({ file, settings, showMarginGuide }: ImagePreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasBounds, setCanvasBounds] = useState({
@@ -58,12 +45,12 @@ function ImagePreview({
   useWatermarkCanvas({
     canvasRef,
     file,
-    watermarkText,
-    fontSize,
-    opacity,
-    watermarkColor,
-    position,
-    margin,
+    watermarkText: settings.text,
+    fontSize: settings.fontSize,
+    opacity: settings.opacity,
+    watermarkColor: settings.color,
+    position: settings.position,
+    margin: settings.margin,
   });
 
   return (
@@ -90,35 +77,35 @@ function ImagePreview({
         >
           <div
             className="absolute inset-x-0 top-0 bg-black/45"
-            style={{ height: `${margin}%` }}
+            style={{ height: `${settings.margin}%` }}
           />
           <div
             className="absolute inset-x-0 bottom-0 bg-black/45"
-            style={{ height: `${margin}%` }}
+            style={{ height: `${settings.margin}%` }}
           />
           <div
             className="absolute left-0 bg-black/45"
             style={{
-              top: `${margin}%`,
-              bottom: `${margin}%`,
-              width: `${margin}%`,
+              top: `${settings.margin}%`,
+              bottom: `${settings.margin}%`,
+              width: `${settings.margin}%`,
             }}
           />
           <div
             className="absolute right-0 bg-black/45"
             style={{
-              top: `${margin}%`,
-              bottom: `${margin}%`,
-              width: `${margin}%`,
+              top: `${settings.margin}%`,
+              bottom: `${settings.margin}%`,
+              width: `${settings.margin}%`,
             }}
           />
           <div
             className="absolute border border-dashed border-white/80"
             style={{
-              left: `${margin}%`,
-              right: `${margin}%`,
-              top: `${margin}%`,
-              bottom: `${margin}%`,
+              left: `${settings.margin}%`,
+              right: `${settings.margin}%`,
+              top: `${settings.margin}%`,
+              bottom: `${settings.margin}%`,
             }}
           />
         </div>
