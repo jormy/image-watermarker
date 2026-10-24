@@ -5,6 +5,9 @@ type ToolbarProps = {
   imageCount: number;
   selectedIndex: number;
   originalDimensions: ImageDimensions | undefined;
+  exportingAction: "selected" | "all" | null;
+  onExportSelected: () => void;
+  onExportAll: () => void;
 };
 
 function formatBytes(bytes: number) {
@@ -24,6 +27,9 @@ function Toolbar({
   imageCount,
   selectedIndex,
   originalDimensions,
+  exportingAction,
+  onExportSelected,
+  onExportAll,
 }: ToolbarProps) {
   if (!file) {
     return (
@@ -54,11 +60,21 @@ function Toolbar({
             : "Loading..."}
         </div>
         <div className="ml-4 flex shrink-0 gap-2">
-          <button className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950">
-            Export Selected
+          <button
+            type="button"
+            disabled={exportingAction !== null}
+            onClick={onExportSelected}
+            className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950 disabled:cursor-wait disabled:opacity-60"
+          >
+            {exportingAction === "selected" ? "Exporting..." : "Export Selected"}
           </button>
-          <button className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950">
-            Export All
+          <button
+            type="button"
+            disabled={exportingAction !== null}
+            onClick={onExportAll}
+            className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950 disabled:cursor-wait disabled:opacity-60"
+          >
+            {exportingAction === "all" ? "Exporting..." : "Export All"}
           </button>
         </div>
       </div>

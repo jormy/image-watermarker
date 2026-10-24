@@ -7,15 +7,16 @@ import type { WatermarkSettings } from "./types/watermark";
 import Toolbar from "./components/Toolbar";
 import createThumbnail from "./lib/createThumbnail";
 import createPreview from "./lib/createPreview";
+import exportImage from "./lib/exportImage";
 
 function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
   const thumbnailCache = useRef(new Map<File, string>());
   const previewCache = useRef(new Map<File, PreviewAsset>());
-  const [previewAssets, setPreviewAssets] = useState<
-    Map<File, PreviewAsset>
-  >(new Map());
+  const [previewAssets, setPreviewAssets] = useState<Map<File, PreviewAsset>>(
+    new Map(),
+  );
   const [watermarkSettings, setWatermarkSettings] = useState<WatermarkSettings>(
     {
       type: "text",
@@ -43,6 +44,9 @@ function App() {
   );
   const [thumbnailHeight, setThumbnailHeight] = useState(144);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [exportingAction, setExportingAction] = useState<
+    "selected" | "all" | null
+  >(null);
 
   const handleMarginChange = (value: number) => {
     updateWatermarkSettings({ margin: value });
@@ -105,6 +109,25 @@ function App() {
 
       return current;
     });
+  };
+
+  const exportFiles = async (
+    filesToExport: File[],
+    action: "selected" | "all",
+  ) => {
+    if (filesToExport.length === 0 || exportingAction) return;
+
+    setExportingAction(action);
+
+    try {
+      for (const file of filesToExport) {
+        await exportImage(file, watermarkSettings);
+      }
+    } catch (error) {
+      console.error("Failed to export image:", error);
+    } finally {
+      setExportingAction(null);
+    }
   };
 
   useEffect(() => {
@@ -199,6 +222,11 @@ function App() {
           imageCount={files.length}
           selectedIndex={selectedIndex}
           originalDimensions={selectedPreview?.originalDimensions}
+          exportingAction={exportingAction}
+          onExportSelected={() =>
+            void exportFiles(selectedFile ? [selectedFile] : [], "selected")
+          }
+          onExportAll={() => void exportFiles(files, "all")}
         />
         <ImagePreview
           preview={selectedPreview}

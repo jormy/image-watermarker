@@ -1,29 +1,30 @@
-import type { PreviewAsset } from "../types/image";
+import type { ImageDimensions } from "../types/image";
 import type { WatermarkSettings } from "../types/watermark";
 
 type RenderWatermarkOptions = {
   canvas: HTMLCanvasElement;
-  preview: PreviewAsset;
+  image: ImageBitmap;
+  originalDimensions: ImageDimensions;
   settings: WatermarkSettings;
 };
 
 function renderWatermark({
   canvas,
-  preview,
+  image,
+  originalDimensions,
   settings,
 }: RenderWatermarkOptions) {
   const context = canvas.getContext("2d");
   if (!context) return;
 
-  const { bitmap, originalDimensions } = preview;
-  const previewScale = bitmap.width / originalDimensions.width;
+  const imageScale = image.width / originalDimensions.width;
 
-  canvas.width = bitmap.width;
-  canvas.height = bitmap.height;
-  context.drawImage(bitmap, 0, 0);
+  canvas.width = image.width;
+  canvas.height = image.height;
+  context.drawImage(image, 0, 0);
 
   const marginPx = canvas.width * (settings.margin / 100);
-  context.font = `${settings.fontWeight} ${settings.fontSize * previewScale}px ${settings.fontFamily}`;
+  context.font = `${settings.fontWeight} ${settings.fontSize * imageScale}px ${settings.fontFamily}`;
   context.fillStyle = settings.color;
   context.globalAlpha = settings.opacity / 100;
   context.textAlign = settings.position.endsWith("right")

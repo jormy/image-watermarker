@@ -23,7 +23,12 @@ function useWatermarkCanvas({
       return;
     }
 
-    renderWatermark({ canvas, preview, settings });
+    renderWatermark({
+      canvas,
+      image: preview.bitmap,
+      originalDimensions: preview.originalDimensions,
+      settings,
+    });
   }, [canvasRef, preview, settings]);
 }
 
