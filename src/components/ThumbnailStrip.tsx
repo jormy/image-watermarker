@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { FaTimes } from "react-icons/fa";
 
 type ThumbnailStripProps = {
   files: File[];
@@ -7,6 +8,7 @@ type ThumbnailStripProps = {
   onSelect: (index: number) => void;
   height: number;
   onHeightChange: (height: number) => void;
+  onRemove: (index: number) => void;
 };
 
 function ThumbnailStrip({
@@ -16,6 +18,7 @@ function ThumbnailStrip({
   onSelect,
   height,
   onHeightChange,
+  onRemove,
 }: ThumbnailStripProps) {
   const [isResizing, setIsResizing] = useState(false);
   return (
@@ -58,18 +61,36 @@ function ThumbnailStrip({
         className="flex shrink-0 items-center gap-4 overflow-x-auto overflow-y-hidden px-6 py-3"
       >
         {previews.map((preview, index) => (
-          <button
-            type="button"
-            onClick={() => onSelect(index)}
-            key={files[index].name}
-            className={`h-full shrink-0 cursor-pointer overflow-hidden rounded-lg ring-2 ring-offset-4 ring-offset-zinc-950 transition ${selectedIndex === index ? "ring-accent" : "ring-transparent hover:ring-4 hover:ring-zinc-600 hover:ring-offset-0"}`}
+          <div
+            key={`${files[index].name}-${index}`}
+            className="group relative h-full shrink-0"
           >
-            <img
-              src={preview}
-              alt={files[index].name}
-              className="h-full w-auto object-contain"
-            />
-          </button>
+            <button
+              type="button"
+              onClick={() => onSelect(index)}
+              className={`h-full cursor-pointer overflow-hidden rounded-lg ring-2 ring-offset-4 ring-offset-zinc-950 transition ${
+                selectedIndex === index
+                  ? "ring-accent"
+                  : "ring-transparent hover:ring-4 hover:ring-zinc-600 hover:ring-offset-0"
+              }`}
+            >
+              <img
+                src={preview}
+                alt={files[index].name}
+                className="h-full w-auto object-contain"
+              />
+            </button>
+
+            <button
+              type="button"
+              aria-label={`Remove ${files[index].name}`}
+              title="Remove image"
+              onClick={() => onRemove(index)}
+              className="absolute top-1 right-1 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-zinc-950/50 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-600 focus:opacity-100"
+            >
+              <FaTimes />
+            </button>
+          </div>
         ))}
       </div>
     </>

@@ -61,7 +61,14 @@ function useWatermarkCanvas({
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !image) return;
+    if (!canvas) return;
+    if (!image) {
+      const context = canvas.getContext("2d");
+      if (context) {
+        context?.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      return;
+    }
 
     renderWatermark({
       canvas,

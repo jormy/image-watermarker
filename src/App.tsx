@@ -68,6 +68,28 @@ function App() {
     setFiles((currentFiles) => [...currentFiles, ...imageFiles]);
   };
 
+  const removeFile = (index: number) => {
+    const file = files[index];
+    if (!file) return;
+
+    const thumbnailUrl = thumbnailCache.current.get(file);
+
+    if (thumbnailUrl) {
+      URL.revokeObjectURL(thumbnailUrl);
+      thumbnailCache.current.delete(file);
+    }
+
+    setFiles((current) => current.filter((_, i) => i !== index));
+    setPreviews((current) => current.filter((_, i) => i !== index));
+
+    setSelectedIndex((current) => {
+      if (current > index) return current - 1;
+      if (current === index) return Math.max(0, index - 1);
+
+      return current;
+    });
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -145,6 +167,7 @@ function App() {
           onSelect={setSelectedIndex}
           height={thumbnailHeight}
           onHeightChange={setThumbnailHeight}
+          onRemove={removeFile}
         />
       </section>
     </main>
