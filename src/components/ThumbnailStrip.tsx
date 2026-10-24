@@ -62,7 +62,7 @@ function ThumbnailStrip({
             type="button"
             onClick={() => onSelect(index)}
             key={files[index].name}
-            className={`h-full shrink-0 cursor-pointer overflow-hidden rounded-lg ring-2 transition ring-offset-4 ring-offset-zinc-950 ${selectedIndex === index ? "ring-accent" : "ring-transparent hover:ring-zinc-600 hover:ring-4 hover:ring-offset-0"}`}
+            className={`h-full shrink-0 cursor-pointer overflow-hidden rounded-lg ring-2 ring-offset-4 ring-offset-zinc-950 transition ${selectedIndex === index ? "ring-accent" : "ring-transparent hover:ring-4 hover:ring-zinc-600 hover:ring-offset-0"}`}
           >
             <img
               src={preview}

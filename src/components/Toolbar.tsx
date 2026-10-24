@@ -9,7 +9,7 @@ type ToolbarProps = {
 function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
   if (!file) {
     return (
-      <div className="w-full text-sm text-zinc-400 border-b border-border px-4 py-3">
+      <div className="w-full border-b border-border px-4 py-3 text-sm text-zinc-400">
         <span>No Image Uploaded</span>
       </div>
     );
@@ -70,7 +70,7 @@ function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
   };
 
   return (
-    <div className="flex w-full justify-between shrink-0 items-center text-sm text-zinc-400 border-b border-border px-4">
+    <div className="flex w-full shrink-0 items-center justify-between border-b border-border px-4 text-sm text-zinc-400">
       <div className="flex truncate py-3">
         <div className="shrink-0 border-r border-border pr-4">
           {selectedIndex + 1}/{imageCount}
@@ -91,11 +91,11 @@ function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
             ? `${resolution.width} x ${resolution.height}`
             : "Loading..."}
         </div>
-        <div className="shrink-0 ml-4 flex gap-2">
-          <button className="bg-accent py-1.5 px-2.5 rounded-md text-zinc-950 cursor-pointer">
+        <div className="ml-4 flex shrink-0 gap-2">
+          <button className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950">
             Export Selected
           </button>
-          <button className="bg-accent py-1.5 px-2.5 rounded-md text-zinc-950 cursor-pointer">
+          <button className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950">
             Export All
           </button>
         </div>

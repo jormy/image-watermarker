@@ -78,7 +78,7 @@ function Sidebar({
         <p className="mt-2 text-zinc-400">{fileCount} file(s) selected.</p>
         <div className="mt-6 grid grid-cols-1 gap-4">
           <div>
-            <label className="mb-2 block text-md font-medium">
+            <label className="text-md mb-2 block font-medium">
               Watermark Text
             </label>
             <input
@@ -91,7 +91,7 @@ function Sidebar({
             />
           </div>
           <div>
-            <label className="mb-2 block text-md font-medium">
+            <label className="text-md mb-2 block font-medium">
               Font Size: {settings.fontSize}px
             </label>
             <input
@@ -106,7 +106,7 @@ function Sidebar({
             />
           </div>
           <div>
-            <label className="mb-2 block text-md font-medium">
+            <label className="text-md mb-2 block font-medium">
               Opacity: {settings.opacity}%
             </label>
             <input
@@ -121,7 +121,7 @@ function Sidebar({
             />
           </div>
           <div>
-            <label className="mb-2 block text-md font-medium">
+            <label className="text-md mb-2 block font-medium">
               Watermark Color
             </label>
             <input
@@ -134,7 +134,7 @@ function Sidebar({
             />
           </div>
           <div>
-            <label className="mb-2 block text-md font-medium">
+            <label className="text-md mb-2 block font-medium">
               Margin: {settings.margin}%
             </label>
             <input
@@ -150,7 +150,7 @@ function Sidebar({
             />
           </div>
           <div>
-            <label className="mb-2 block text-md font-medium">Position</label>
+            <label className="text-md mb-2 block font-medium">Position</label>
             <div className="grid w-fit grid-cols-3 gap-2">
               {positions.map((item) => (
                 <button
