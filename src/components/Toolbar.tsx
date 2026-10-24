@@ -70,8 +70,8 @@ function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
   };
 
   return (
-    <div className="flex w-full justify-between shrink-0 items-center text-sm text-zinc-400 border-b border-border px-4 py-3">
-      <div className="flex truncate">
+    <div className="flex w-full justify-between shrink-0 items-center text-sm text-zinc-400 border-b border-border px-4">
+      <div className="flex truncate py-3">
         <div className="shrink-0 border-r border-border pr-4">
           {selectedIndex + 1}/{imageCount}
         </div>
@@ -79,17 +79,25 @@ function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
           <span className="min-w-0">{file.name}</span>
         </div>
       </div>
-      <div className="flex shrink-0">
+      <div className="flex shrink-0 items-center">
         <div className="shrink-0 border-x border-border px-4">
           {formatBytes(file.size)}
         </div>
         <div className="shrink-0 border-r border-border px-4">
           {formatType(file.type)}
         </div>
-        <div className="shrink-0 pl-4">
+        <div className="shrink-0 border-r border-border px-4">
           {resolution
             ? `${resolution.width} x ${resolution.height}`
             : "Loading..."}
+        </div>
+        <div className="shrink-0 ml-4 flex gap-2">
+          <button className="bg-accent py-1.5 px-2.5 rounded-md text-zinc-950 cursor-pointer">
+            Export Selected
+          </button>
+          <button className="bg-accent py-1.5 px-2.5 rounded-md text-zinc-950 cursor-pointer">
+            Export All
+          </button>
         </div>
       </div>
     </div>
