@@ -3,6 +3,7 @@ import ImagePreview from "./components/ImagePreview";
 import Sidebar from "./components/Sidebar";
 import ThumbnailStrip from "./components/ThumbnailStrip";
 import type { WatermarkSettings } from "./types/watermark";
+import Toolbar from "./components/Toolbar";
 
 function App() {
   const [files, setFiles] = useState<File[]>([]);
@@ -86,6 +87,11 @@ function App() {
         }}
       />
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <Toolbar
+          file={files[selectedIndex]}
+          imageCount={files.length}
+          selectedIndex={selectedIndex}
+        />
         <ImagePreview
           file={files[selectedIndex]}
           settings={watermarkSettings}

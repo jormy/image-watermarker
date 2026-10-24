@@ -4,6 +4,7 @@
 @theme {
   --font-sans: "Inter Variable", sans-serif;
   --color-accent: #f56960;
+  --color-border: var(--color-zinc-600);
 }
 
 * {

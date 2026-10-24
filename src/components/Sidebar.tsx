@@ -40,7 +40,7 @@ function Sidebar({
   const [isDragging, setIsDragging] = useState(false);
 
   return (
-    <aside className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-zinc-800 p-6">
+    <aside className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-border p-6">
       <div>
         <h1 className="text-4xl font-semibold tracking-tight">
           Image Watermarker
