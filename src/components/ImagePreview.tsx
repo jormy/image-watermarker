@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
+import useWatermarkCanvas from "../hooks/useWatermarkCanvas";
 
 type ImagePreviewProps = {
   file: File | undefined;
@@ -54,55 +55,8 @@ function ImagePreview({
     return () => observer.disconnect();
   }, [file]);
 
-  useEffect(() => {
-    if (!file || !canvasRef.current) return;
-    const canvas = canvasRef.current;
-    let image: ImageBitmap | undefined;
-    let isCurrent = true;
-    const draw = async () => {
-      image = await createImageBitmap(file);
-      if (!isCurrent) {
-        image.close();
-        return;
-      }
-      const context = canvas.getContext("2d");
-      if (!context) return;
-      canvas.width = image.width;
-      canvas.height = image.height;
-      context.drawImage(image, 0, 0);
-      const marginPx = image.width * (margin / 100);
-      context.font = `bold ${fontSize}px sans-serif`;
-      context.fillStyle = watermarkColor;
-      context.globalAlpha = opacity / 100;
-      context.textAlign = position.endsWith("right")
-        ? "right"
-        : position.endsWith("center") || position === "center"
-          ? "center"
-          : "left";
-      context.textBaseline = position.startsWith("bottom")
-        ? "bottom"
-        : position.startsWith("center-") || position === "center"
-          ? "middle"
-          : "top";
-      const x = position.endsWith("right")
-        ? image.width - marginPx
-        : context.textAlign === "center"
-          ? image.width / 2
-          : marginPx;
-      const y = position.startsWith("bottom")
-        ? image.height - marginPx
-        : context.textBaseline === "middle"
-          ? image.height / 2
-          : marginPx;
-      context.fillText(watermarkText, x, y);
-      context.globalAlpha = 1;
-    };
-    draw();
-    return () => {
-      isCurrent = false;
-      image?.close();
-    };
-  }, [
+  useWatermarkCanvas({
+    canvasRef,
     file,
     watermarkText,
     fontSize,
@@ -110,7 +64,7 @@ function ImagePreview({
     watermarkColor,
     position,
     margin,
-  ]);
+  });
 
   return (
     <div
@@ -134,15 +88,29 @@ function ImagePreview({
             height: canvasBounds.height,
           }}
         >
-          <div className="absolute inset-x-0 top-0 bg-black/45" style={{ height: `${margin}%` }} />
-          <div className="absolute inset-x-0 bottom-0 bg-black/45" style={{ height: `${margin}%` }} />
+          <div
+            className="absolute inset-x-0 top-0 bg-black/45"
+            style={{ height: `${margin}%` }}
+          />
+          <div
+            className="absolute inset-x-0 bottom-0 bg-black/45"
+            style={{ height: `${margin}%` }}
+          />
           <div
             className="absolute left-0 bg-black/45"
-            style={{ top: `${margin}%`, bottom: `${margin}%`, width: `${margin}%` }}
+            style={{
+              top: `${margin}%`,
+              bottom: `${margin}%`,
+              width: `${margin}%`,
+            }}
           />
           <div
             className="absolute right-0 bg-black/45"
-            style={{ top: `${margin}%`, bottom: `${margin}%`, width: `${margin}%` }}
+            style={{
+              top: `${margin}%`,
+              bottom: `${margin}%`,
+              width: `${margin}%`,
+            }}
           />
           <div
             className="absolute border border-dashed border-white/80"
