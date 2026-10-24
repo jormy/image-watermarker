@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import ImagePreview from "./components/ImagePreview";
 import Sidebar from "./components/Sidebar";
 import ThumbnailStrip from "./components/ThumbnailStrip";
+import type { PreviewAsset } from "./types/image";
 import type { WatermarkSettings } from "./types/watermark";
 import Toolbar from "./components/Toolbar";
 import createThumbnail from "./lib/createThumbnail";
@@ -9,9 +10,12 @@ import createPreview from "./lib/createPreview";
 
 function App() {
   const [files, setFiles] = useState<File[]>([]);
-  const [previews, setPreviews] = useState<string[]>([]);
+  const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
   const thumbnailCache = useRef(new Map<File, string>());
-  const previewCache = useRef(new Map<File, ImageBitmap>());
+  const previewCache = useRef(new Map<File, PreviewAsset>());
+  const [previewAssets, setPreviewAssets] = useState<
+    Map<File, PreviewAsset>
+  >(new Map());
   const [watermarkSettings, setWatermarkSettings] = useState<WatermarkSettings>(
     {
       type: "text",
@@ -75,20 +79,25 @@ function App() {
     if (!file) return;
 
     const thumbnailUrl = thumbnailCache.current.get(file);
-    const preview = previewCache.current.get(file);
+    const previewAsset = previewCache.current.get(file);
 
     if (thumbnailUrl) {
       URL.revokeObjectURL(thumbnailUrl);
       thumbnailCache.current.delete(file);
     }
 
-    if (preview) {
-      preview.close();
+    if (previewAsset) {
+      previewAsset.bitmap.close();
       previewCache.current.delete(file);
     }
 
     setFiles((current) => current.filter((_, i) => i !== index));
-    setPreviews((current) => current.filter((_, i) => i !== index));
+    setThumbnailUrls((current) => current.filter((_, i) => i !== index));
+    setPreviewAssets((current) => {
+      const next = new Map(current);
+      next.delete(file);
+      return next;
+    });
 
     setSelectedIndex((current) => {
       if (current > index) return current - 1;
@@ -103,7 +112,7 @@ function App() {
 
     const generateImageAssets = async () => {
       const cache = thumbnailCache.current;
-      const previews = previewCache.current;
+      const previewAssets = previewCache.current;
 
       try {
         for (const file of files) {
@@ -120,20 +129,21 @@ function App() {
             cache.set(file, url);
           }
 
-          if (!previews.has(file)) {
+          if (!previewAssets.has(file)) {
             const preview = await createPreview(file);
 
             if (cancelled) {
-              preview.close();
+              preview.bitmap.close();
               return;
             }
 
-            previews.set(file, preview);
+            previewAssets.set(file, preview);
           }
         }
 
         if (!cancelled) {
-          setPreviews(files.map((file) => cache.get(file) ?? ""));
+          setThumbnailUrls(files.map((file) => cache.get(file) ?? ""));
+          setPreviewAssets(new Map(previewAssets));
         }
       } catch (error) {
         console.error("Failed to generate image assets:", error);
@@ -148,18 +158,26 @@ function App() {
   }, [files]);
 
   useEffect(() => {
+    const thumbnailUrls = thumbnailCache.current;
+    const previewAssets = previewCache.current;
+
     return () => {
-      thumbnailCache.current.forEach((url) => {
+      thumbnailUrls.forEach((url) => {
         URL.revokeObjectURL(url);
       });
-      thumbnailCache.current.clear();
+      thumbnailUrls.clear();
 
-      previewCache.current.forEach((preview) => {
-        preview.close();
+      previewAssets.forEach((previewAsset) => {
+        previewAsset.bitmap.close();
       });
-      previewCache.current.clear();
+      previewAssets.clear();
     };
   }, []);
+
+  const selectedFile = files[selectedIndex];
+  const selectedPreview = selectedFile
+    ? previewAssets.get(selectedFile)
+    : undefined;
 
   return (
     <main className="flex h-dvh w-screen overflow-hidden bg-zinc-950 text-white">
@@ -177,22 +195,19 @@ function App() {
       />
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Toolbar
-          file={files[selectedIndex]}
+          file={selectedFile}
           imageCount={files.length}
           selectedIndex={selectedIndex}
+          originalDimensions={selectedPreview?.originalDimensions}
         />
         <ImagePreview
-          image={
-            files[selectedIndex]
-              ? (previewCache.current.get(files[selectedIndex]) ?? undefined)
-              : undefined
-          }
+          preview={selectedPreview}
           settings={watermarkSettings}
           showMarginGuide={showMarginGuide}
         />
         <ThumbnailStrip
           files={files}
-          previews={previews}
+          previews={thumbnailUrls}
           selectedIndex={selectedIndex}
           onSelect={setSelectedIndex}
           height={thumbnailHeight}

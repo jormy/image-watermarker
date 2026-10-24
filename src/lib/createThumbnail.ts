@@ -18,7 +18,6 @@ async function createThumbnail(
 
     const context = canvas.getContext("2d");
     if (!context) {
-      image.close();
       throw new Error("Could not create thumbnail canvas");
     }
 

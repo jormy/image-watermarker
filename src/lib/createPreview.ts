@@ -1,7 +1,9 @@
+import type { PreviewAsset } from "../types/image";
+
 async function createPreview(
   file: File,
   maxDimension = 1600,
-): Promise<ImageBitmap> {
+): Promise<PreviewAsset> {
   const image = await createImageBitmap(file);
 
   try {
@@ -25,7 +27,10 @@ async function createPreview(
 
     context.drawImage(image, 0, 0, width, height);
 
-    return await createImageBitmap(canvas);
+    return {
+      bitmap: await createImageBitmap(canvas),
+      originalDimensions: { width: image.width, height: image.height },
+    };
   } finally {
     image.close();
   }

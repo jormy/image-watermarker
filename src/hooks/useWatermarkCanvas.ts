@@ -1,58 +1,30 @@
 import { useEffect, type RefObject } from "react";
 import renderWatermark from "../lib/renderWatermark";
+import type { PreviewAsset } from "../types/image";
+import type { WatermarkSettings } from "../types/watermark";
 
 type UseWatermarkCanvasProps = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
-  image: ImageBitmap | undefined;
-  watermarkText: string;
-  fontSize: number;
-  opacity: number;
-  watermarkColor: string;
-  position: string;
-  margin: number;
+  preview: PreviewAsset | undefined;
+  settings: WatermarkSettings;
 };
 
 function useWatermarkCanvas({
   canvasRef,
-  image,
-  watermarkText,
-  fontSize,
-  opacity,
-  watermarkColor,
-  position,
-  margin,
+  preview,
+  settings,
 }: UseWatermarkCanvasProps) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    if (!image) {
-      const context = canvas.getContext("2d");
-      if (context) {
-        context?.clearRect(0, 0, canvas.width, canvas.height);
-      }
+
+    if (!preview) {
+      canvas.getContext("2d")?.clearRect(0, 0, canvas.width, canvas.height);
       return;
     }
 
-    renderWatermark({
-      canvas,
-      image,
-      watermarkText,
-      fontSize,
-      opacity,
-      watermarkColor,
-      position,
-      margin,
-    });
-  }, [
-    canvasRef,
-    image,
-    watermarkText,
-    fontSize,
-    opacity,
-    watermarkColor,
-    position,
-    margin,
-  ]);
+    renderWatermark({ canvas, preview, settings });
+  }, [canvasRef, preview, settings]);
 }
 
 export default useWatermarkCanvas;

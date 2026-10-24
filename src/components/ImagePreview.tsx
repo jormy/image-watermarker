@@ -1,14 +1,15 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import useWatermarkCanvas from "../hooks/useWatermarkCanvas";
+import type { PreviewAsset } from "../types/image";
 import type { WatermarkSettings } from "../types/watermark";
 
 type ImagePreviewProps = {
-  image: ImageBitmap | undefined;
+  preview: PreviewAsset | undefined;
   settings: WatermarkSettings;
   showMarginGuide: boolean;
 };
 
-function ImagePreview({ image, settings, showMarginGuide }: ImagePreviewProps) {
+function ImagePreview({ preview, settings, showMarginGuide }: ImagePreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasBounds, setCanvasBounds] = useState({
@@ -40,17 +41,12 @@ function ImagePreview({ image, settings, showMarginGuide }: ImagePreviewProps) {
     updateCanvasBounds();
 
     return () => observer.disconnect();
-  }, [image]);
+  }, [preview]);
 
   useWatermarkCanvas({
     canvasRef,
-    image,
-    watermarkText: settings.text,
-    fontSize: settings.fontSize,
-    opacity: settings.opacity,
-    watermarkColor: settings.color,
-    position: settings.position,
-    margin: settings.margin,
+    preview,
+    settings,
   });
 
   return (

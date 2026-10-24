@@ -1,73 +1,37 @@
-import { useEffect, useState } from "react";
+import type { ImageDimensions } from "../types/image";
 
 type ToolbarProps = {
   file: File | undefined;
   imageCount: number;
   selectedIndex: number;
+  originalDimensions: ImageDimensions | undefined;
 };
 
-function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
+function formatBytes(bytes: number) {
+  if (bytes === 0) return "0 Bytes";
+
+  const units = ["Bytes", "KB", "MB", "GB", "TB"];
+  const unitIndex = Math.floor(Math.log(bytes) / Math.log(1024));
+  return `${(bytes / 1024 ** unitIndex).toFixed(2)} ${units[unitIndex]}`;
+}
+
+function formatType(type: string) {
+  return type.split("/")[1]?.toUpperCase() ?? "Unknown";
+}
+
+function Toolbar({
+  file,
+  imageCount,
+  selectedIndex,
+  originalDimensions,
+}: ToolbarProps) {
   if (!file) {
     return (
       <div className="w-full border-b border-border px-4 py-3 text-sm text-zinc-400">
-        <span>No Image Uploaded</span>
+        No Image Uploaded
       </div>
     );
   }
-
-  const [resolution, setResolution] = useState<{
-    width: number;
-    height: number;
-  } | null>(null);
-
-  useEffect(() => {
-    if (!file) {
-      setResolution(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const image = new Image();
-    const url = URL.createObjectURL(file);
-
-    image.onload = () => {
-      if (cancelled) return;
-
-      setResolution({
-        width: image.naturalWidth,
-        height: image.naturalHeight,
-      });
-
-      URL.revokeObjectURL(url);
-    };
-
-    image.onerror = () => {
-      if (cancelled) return;
-
-      setResolution(null);
-      URL.revokeObjectURL(url);
-    };
-
-    image.src = url;
-
-    return () => {
-      cancelled = true;
-      URL.revokeObjectURL(url);
-    };
-  }, [file]);
-
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
-
-  const formatType = (type: string) => {
-    return type.split("/")[1].toUpperCase() ?? "Unknown";
-  };
 
   return (
     <div className="flex w-full shrink-0 items-center justify-between border-b border-border px-4 text-sm text-zinc-400">
@@ -75,9 +39,7 @@ function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
         <div className="shrink-0 border-r border-border pr-4">
           {selectedIndex + 1}/{imageCount}
         </div>
-        <div className="shrink truncate px-4">
-          <span className="min-w-0">{file.name}</span>
-        </div>
+        <div className="shrink truncate px-4">{file.name}</div>
       </div>
       <div className="flex shrink-0 items-center">
         <div className="shrink-0 border-x border-border px-4">
@@ -87,8 +49,8 @@ function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
           {formatType(file.type)}
         </div>
         <div className="shrink-0 border-r border-border px-4">
-          {resolution
-            ? `${resolution.width} x ${resolution.height}`
+          {originalDimensions
+            ? `${originalDimensions.width} x ${originalDimensions.height}`
             : "Loading..."}
         </div>
         <div className="ml-4 flex shrink-0 gap-2">
