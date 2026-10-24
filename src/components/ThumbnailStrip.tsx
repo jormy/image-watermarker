@@ -47,10 +47,10 @@ function ThumbnailStrip({
         }}
         onPointerUp={() => setIsResizing(false)}
         onPointerCancel={() => setIsResizing(false)}
-        className="group relative z-10 flex h-3 shrink-0 cursor-row-resize items-center justify-center border-t border-zinc-800 bg-zinc-950"
+        className="group relative z-10 flex h-3 shrink-0 cursor-row-resize items-center justify-center border-t border-border bg-zinc-950"
       >
         <div
-          className={`h-1 w-12 rounded-full transition-colors ${isResizing ? "bg-accent" : "bg-zinc-700 group-hover:bg-accent"}`}
+          className={`h-1 w-12 rounded-full transition-colors ${isResizing ? "bg-accent" : "bg-border group-hover:bg-accent"}`}
         />
       </div>
       <div

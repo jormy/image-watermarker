@@ -9,8 +9,8 @@ type ToolbarProps = {
 function Toolbar({ file, imageCount, selectedIndex }: ToolbarProps) {
   if (!file) {
     return (
-      <div className="flex h-14 w-full items-center border-b border-zinc-800 px-5">
-        <span>No Image Selected</span>
+      <div className="w-full text-sm text-zinc-400 border-b border-border px-4 py-3">
+        <span>No Image Uploaded</span>
       </div>
     );
   }
