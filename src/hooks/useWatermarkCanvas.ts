@@ -1,4 +1,4 @@
-import { useEffect, type RefObject } from "react";
+import { useEffect, useState, type RefObject } from "react";
 import renderWatermark from "../lib/renderWatermark";
 
 type UseWatermarkCanvasProps = {
@@ -10,6 +10,7 @@ type UseWatermarkCanvasProps = {
   watermarkColor: string;
   position: string;
   margin: number;
+  maxDimension: number;
 };
 
 function useWatermarkCanvas({
@@ -21,48 +22,61 @@ function useWatermarkCanvas({
   watermarkColor,
   position,
   margin,
+  maxDimension,
 }: UseWatermarkCanvasProps) {
+  const [image, setImage] = useState<ImageBitmap | null>(null);
+
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!file || !canvas) return;
+    if (!file) {
+      setImage(null);
+      return;
+    }
 
     let isCurrent = true;
-    let image: ImageBitmap | undefined;
+    let bitmap: ImageBitmap | null = null;
 
-    const draw = async () => {
+    const loadImage = async () => {
       try {
-        image = await createImageBitmap(file);
-
+        bitmap = await createImageBitmap(file);
         if (!isCurrent) {
-          image.close();
+          bitmap.close();
           return;
         }
-        renderWatermark({
-          canvas,
-          image,
-          watermarkText,
-          fontSize,
-          opacity,
-          watermarkColor,
-          position,
-          margin,
-        });
+        setImage(bitmap);
       } catch (error) {
         if (isCurrent) {
-          console.error("Failed to render image watermark:", error);
+          console.error("Failed to load image:", error);
+          setImage(null);
         }
       }
     };
 
-    void draw();
+    void loadImage();
 
     return () => {
       isCurrent = false;
-      image?.close();
+      bitmap?.close();
     };
+  }, [file]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !image) return;
+
+    renderWatermark({
+      canvas,
+      image,
+      watermarkText,
+      fontSize,
+      opacity,
+      watermarkColor,
+      position,
+      margin,
+      maxDimension,
+    });
   }, [
     canvasRef,
-    file,
+    image,
     watermarkText,
     fontSize,
     opacity,

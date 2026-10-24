@@ -4,10 +4,12 @@ import Sidebar from "./components/Sidebar";
 import ThumbnailStrip from "./components/ThumbnailStrip";
 import type { WatermarkSettings } from "./types/watermark";
 import Toolbar from "./components/Toolbar";
+import createThumbnail from "./lib/createThumbnail";
 
 function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const thumbnailCache = useRef(new Map<File, string>());
   const [watermarkSettings, setWatermarkSettings] = useState<WatermarkSettings>(
     {
       type: "text",
@@ -16,7 +18,7 @@ function App() {
       fontFamily: "sans-serif",
       fontWeight: "normal",
       color: "#FFFFFF",
-      opacity: 0.5,
+      opacity: 50,
       position: "bottom-right",
       margin: 10,
       rotation: 0,
@@ -67,10 +69,49 @@ function App() {
   };
 
   useEffect(() => {
-    const urls = files.map((file) => URL.createObjectURL(file));
-    setPreviews(urls);
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+    let cancelled = false;
+
+    const generateThumbnails = async () => {
+      const cache = thumbnailCache.current;
+
+      try {
+        for (const file of files) {
+          if (cancelled) return;
+          if (cache.has(file)) continue;
+
+          const url = await createThumbnail(file);
+
+          if (cancelled) {
+            URL.revokeObjectURL(url);
+            return;
+          }
+
+          cache.set(file, url);
+        }
+
+        if (!cancelled) {
+          setPreviews(files.map((file) => cache.get(file) ?? ""));
+        }
+      } catch (error) {
+        console.error("Failed to generate thumbnails:", error);
+      }
+    };
+
+    void generateThumbnails();
+
+    return () => {
+      cancelled = true;
+    };
   }, [files]);
+
+  useEffect(() => {
+    return () => {
+      thumbnailCache.current.forEach((url) => {
+        URL.revokeObjectURL(url);
+      });
+      thumbnailCache.current.clear();
+    };
+  }, []);
 
   return (
     <main className="flex h-dvh w-screen overflow-hidden bg-zinc-950 text-white">

@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import useWatermarkCanvas from "../hooks/useWatermarkCanvas";
 import type { WatermarkSettings } from "../types/watermark";
 
@@ -11,12 +11,29 @@ type ImagePreviewProps = {
 function ImagePreview({ file, settings, showMarginGuide }: ImagePreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [previewWidth, setPreviewWidth] = useState(0);
   const [canvasBounds, setCanvasBounds] = useState({
     left: 0,
     top: 0,
     width: 0,
     height: 0,
   });
+
+  useEffect(() => {
+    const container = previewRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setPreviewWidth(entry.contentRect.width);
+    });
+
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  });
+
+  const maxPreviewDimension =
+    previewWidth < 600 ? 800 : previewWidth < 1200 ? 1200 : 1600;
 
   useLayoutEffect(() => {
     const preview = previewRef.current;
@@ -51,6 +68,7 @@ function ImagePreview({ file, settings, showMarginGuide }: ImagePreviewProps) {
     watermarkColor: settings.color,
     position: settings.position,
     margin: settings.margin,
+    maxDimension: maxPreviewDimension,
   });
 
   return (
