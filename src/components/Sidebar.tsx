@@ -42,12 +42,12 @@ function Sidebar({
   return (
     <aside className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-border p-6">
       <div>
-        <h1 className="text-4xl font-semibold tracking-tight">
-          Image Watermarker
-        </h1>
-        <p className="mt-2 text-zinc-400">
-          Watermark your images directly in your browser.
-        </p>
+        <div className="flex items-center gap-3">
+          <img src="/favicon.svg" alt="Logo" className="size-8" />
+          <h1 className="text-3xl font-semibold tracking-tight">
+            Image Watermarker
+          </h1>
+        </div>
         <label
           onDragOver={(event) => {
             event.preventDefault();
