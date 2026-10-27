@@ -3,6 +3,7 @@ import ImagePreview from "./components/ImagePreview";
 import Sidebar from "./components/Sidebar";
 import ThumbnailStrip from "./components/ThumbnailStrip";
 import type { PreviewAsset } from "./types/image";
+import type { ExportFormat } from "./types/export";
 import type { WatermarkSettings } from "./types/watermark";
 import Toolbar from "./components/Toolbar";
 import createThumbnail from "./lib/createThumbnail";
@@ -47,6 +48,7 @@ function App() {
   const [exportingAction, setExportingAction] = useState<
     "selected" | "all" | null
   >(null);
+  const [exportFormat, setExportFormat] = useState<ExportFormat>("png");
 
   const handleMarginChange = (value: number) => {
     updateWatermarkSettings({ margin: value });
@@ -121,7 +123,7 @@ function App() {
 
     try {
       for (const file of filesToExport) {
-        await exportImage(file, watermarkSettings);
+        await exportImage(file, watermarkSettings, exportFormat);
       }
     } catch (error) {
       console.error("Failed to export image:", error);
@@ -223,6 +225,8 @@ function App() {
           selectedIndex={selectedIndex}
           originalDimensions={selectedPreview?.originalDimensions}
           exportingAction={exportingAction}
+          exportFormat={exportFormat}
+          onExportFormatChange={setExportFormat}
           onExportSelected={() =>
             void exportFiles(selectedFile ? [selectedFile] : [], "selected")
           }

@@ -157,7 +157,7 @@ function Sidebar({
                   key={item.value}
                   type="button"
                   onClick={() => onWatermarkChange({ position: item.value })}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${settings.position === item.value ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${settings.position === item.value ? "border-accent bg-accent text-black" : "cursor-pointer border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
                   aria-label={item.value}
                   aria-pressed={settings.position === item.value}
                 >

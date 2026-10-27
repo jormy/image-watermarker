@@ -1,4 +1,6 @@
+import type { ExportFormat } from "../types/export";
 import type { ImageDimensions } from "../types/image";
+import { FiDownload } from "react-icons/fi";
 
 type ToolbarProps = {
   file: File | undefined;
@@ -6,6 +8,8 @@ type ToolbarProps = {
   selectedIndex: number;
   originalDimensions: ImageDimensions | undefined;
   exportingAction: "selected" | "all" | null;
+  exportFormat: ExportFormat;
+  onExportFormatChange: (format: ExportFormat) => void;
   onExportSelected: () => void;
   onExportAll: () => void;
 };
@@ -28,9 +32,13 @@ function Toolbar({
   selectedIndex,
   originalDimensions,
   exportingAction,
+  exportFormat,
+  onExportFormatChange,
   onExportSelected,
   onExportAll,
 }: ToolbarProps) {
+  const isExporting = exportingAction !== null;
+
   if (!file) {
     return (
       <div className="w-full border-b border-border px-4 py-3 text-sm text-zinc-400">
@@ -59,23 +67,41 @@ function Toolbar({
             ? `${originalDimensions.width} x ${originalDimensions.height}`
             : "Loading..."}
         </div>
-        <div className="ml-4 flex shrink-0 gap-2">
-          <button
-            type="button"
-            disabled={exportingAction !== null}
-            onClick={onExportSelected}
-            className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950 disabled:cursor-wait disabled:opacity-60"
+
+        <div className="ml-4 flex items-center gap-1.5">
+          <div className="flex h-7.5 divide-x divide-zinc-950 overflow-hidden rounded-lg bg-accent text-zinc-950">
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={onExportSelected}
+              className="flex cursor-pointer items-center gap-1 px-2.5 transition hover:bg-white/20 disabled:cursor-wait disabled:opacity-60"
+            >
+              <FiDownload className="size-3.5" />
+              {exportingAction === "selected" ? "Exporting..." : "Selected"}
+            </button>
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={onExportAll}
+              className="flex cursor-pointer items-center gap-1 px-2.5 transition hover:bg-white/20 disabled:cursor-wait disabled:opacity-60"
+            >
+              <FiDownload className="size-3.5" />
+              {exportingAction === "all" ? "Exporting..." : "All"}
+            </button>
+          </div>
+          <select
+            value={exportFormat}
+            disabled={isExporting}
+            onChange={(event) =>
+              onExportFormatChange(event.target.value as ExportFormat)
+            }
+            className="h-7.5 cursor-pointer rounded-lg border border-border bg-zinc-800 px-3 text-white transition hover:bg-zinc-700 disabled:cursor-wait disabled:opacity-60"
+            aria-label="Export format"
           >
-            {exportingAction === "selected" ? "Exporting..." : "Export Selected"}
-          </button>
-          <button
-            type="button"
-            disabled={exportingAction !== null}
-            onClick={onExportAll}
-            className="cursor-pointer rounded-md bg-accent px-2.5 py-1.5 text-zinc-950 disabled:cursor-wait disabled:opacity-60"
-          >
-            {exportingAction === "all" ? "Exporting..." : "Export All"}
-          </button>
+            <option value="png">PNG</option>
+            <option value="jpeg">JPG</option>
+            <option value="source">Source</option>
+          </select>
         </div>
       </div>
     </div>

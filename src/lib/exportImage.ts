@@ -1,7 +1,28 @@
 import renderWatermark from "./renderWatermark";
+import type { ExportFormat } from "../types/export";
 import type { WatermarkSettings } from "../types/watermark";
 
-function canvasToBlob(canvas: HTMLCanvasElement) {
+type ExportOptions = {
+  mimeType: "image/png" | "image/jpeg" | "image/webp";
+  extension: "png" | "jpg" | "webp";
+};
+
+function getExportOptions(file: File, format: ExportFormat): ExportOptions {
+  if (format === "png") return { mimeType: "image/png", extension: "png" };
+  if (format === "jpeg") return { mimeType: "image/jpeg", extension: "jpg" };
+
+  if (file.type === "image/jpeg") {
+    return { mimeType: "image/jpeg", extension: "jpg" };
+  }
+
+  if (file.type === "image/webp") {
+    return { mimeType: "image/webp", extension: "webp" };
+  }
+
+  return { mimeType: "image/png", extension: "png" };
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, options: ExportOptions) {
   return new Promise<Blob>((resolve, reject) => {
     canvas.toBlob((blob) => {
       if (blob) {
@@ -9,7 +30,7 @@ function canvasToBlob(canvas: HTMLCanvasElement) {
       } else {
         reject(new Error("Could not create exported image"));
       }
-    }, "image/png");
+    }, options.mimeType, options.mimeType === "image/png" ? undefined : 0.92);
   });
 }
 
@@ -26,12 +47,16 @@ function downloadBlob(blob: Blob, fileName: string) {
   setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
-function getExportFileName(fileName: string) {
+function getExportFileName(fileName: string, extension: ExportOptions["extension"]) {
   const nameWithoutExtension = fileName.replace(/\.[^/.]+$/, "");
-  return `${nameWithoutExtension}-watermarked.png`;
+  return `${nameWithoutExtension}-watermarked.${extension}`;
 }
 
-async function exportImage(file: File, settings: WatermarkSettings) {
+async function exportImage(
+  file: File,
+  settings: WatermarkSettings,
+  format: ExportFormat,
+) {
   const image = await createImageBitmap(file);
 
   try {
@@ -43,7 +68,11 @@ async function exportImage(file: File, settings: WatermarkSettings) {
       settings,
     });
 
-    downloadBlob(await canvasToBlob(canvas), getExportFileName(file.name));
+    const options = getExportOptions(file, format);
+    downloadBlob(
+      await canvasToBlob(canvas, options),
+      getExportFileName(file.name, options.extension),
+    );
   } finally {
     image.close();
   }
