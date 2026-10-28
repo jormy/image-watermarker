@@ -18,13 +18,20 @@ function renderWatermark({
   if (!context) return;
 
   const imageScale = image.width / originalDimensions.width;
+  const fontStyle = settings.italic ? "italic" : "normal";
 
   canvas.width = image.width;
   canvas.height = image.height;
   context.drawImage(image, 0, 0);
 
   const marginPx = canvas.width * (settings.margin / 100);
-  context.font = `${settings.fontWeight} ${settings.fontSize * imageScale}px ${settings.fontFamily}`;
+  const baseFontSize =
+    settings.fontSizeMode === "percentage"
+      ? originalDimensions.width * (settings.fontSize / 100)
+      : settings.fontSize;
+  const scaledFontSize = baseFontSize * imageScale;
+
+  context.font = `${fontStyle} ${settings.fontWeight} ${scaledFontSize}px ${settings.fontFamily}`;
   context.fillStyle = settings.color;
   context.globalAlpha = settings.opacity / 100;
   context.textAlign = settings.position.endsWith("right")
@@ -52,6 +59,30 @@ function renderWatermark({
         : marginPx;
 
   context.fillText(settings.text, x, y);
+
+  if (settings.underline) {
+    const metrics = context.measureText(settings.text);
+    const textWidth = metrics.width;
+    const underlineGap = scaledFontSize * 0.05;
+    const underlineY =
+      context.textBaseline === "top"
+        ? y + scaledFontSize + underlineGap
+        : context.textBaseline === "middle"
+          ? y + scaledFontSize / 2 + underlineGap
+          : y + underlineGap;
+    const underlineThickness = Math.max(1, scaledFontSize * 0.1);
+
+    let underlineX = x;
+
+    if (context.textAlign === "center") {
+      underlineX = x - textWidth / 2;
+    } else if (context.textAlign === "right") {
+      underlineX = x - textWidth;
+    }
+
+    context.fillRect(underlineX, underlineY, textWidth, underlineThickness);
+  }
+
   context.globalAlpha = 1;
 }
 

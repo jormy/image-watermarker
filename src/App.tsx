@@ -23,8 +23,11 @@ function App() {
       type: "text",
       text: "Sample Watermark",
       fontSize: 24,
+      fontSizeMode: "px",
       fontFamily: "sans-serif",
-      fontWeight: "normal",
+      fontWeight: "400",
+      italic: false,
+      underline: false,
       color: "#FFFFFF",
       opacity: 50,
       position: "bottom-right",
@@ -217,6 +220,7 @@ function App() {
             updateWatermarkSettings(updates);
           }
         }}
+        imageWidth={selectedPreview?.originalDimensions.width}
       />
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Toolbar

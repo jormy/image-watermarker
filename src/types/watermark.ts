@@ -13,8 +13,12 @@ export type WatermarkSettings = {
   type: "text" | "image";
   text: string;
   fontSize: number;
+  fontSizeMode: "px" | "percentage";
   fontFamily: string;
-  fontWeight: string;
+  fontWeight:
+    "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900";
+  italic: boolean;
+  underline: boolean;
   color: string;
   opacity: number;
   position: WatermarkPosition;
