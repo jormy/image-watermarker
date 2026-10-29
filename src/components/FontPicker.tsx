@@ -191,8 +191,8 @@ function FontPicker({
             </div>
           </div>
 
-          <div className="flex min-h-0 flex-col p-8">
-            <p className="text-sm font-medium tracking-wide text-zinc-500 uppercase">
+          <div className="flex min-h-0 flex-col px-8 pt-7 pb-10">
+            <p className="mb-4 text-sm font-medium tracking-wide text-zinc-500 uppercase">
               Preview
             </p>
             <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden rounded-xl border border-border bg-zinc-900/50 p-8">

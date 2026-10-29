@@ -1,18 +1,6 @@
 import { useState } from "react";
 import type { WatermarkPosition, WatermarkSettings } from "../types/watermark";
-import {
-  FiCrosshair,
-  FiArrowUp,
-  FiArrowDown,
-  FiArrowLeft,
-  FiArrowRight,
-  FiArrowUpLeft,
-  FiArrowUpRight,
-  FiArrowDownLeft,
-  FiArrowDownRight,
-} from "react-icons/fi";
-import { FaUnderline } from "react-icons/fa";
-import { FaItalic } from "react-icons/fa";
+import { FaUnderline, FaItalic, FaSearch } from "react-icons/fa";
 import FontPicker from "./FontPicker";
 
 type SidebarProps = {
@@ -47,16 +35,16 @@ const fontWeights = [
   { label: "900", value: "900" },
 ];
 
-const positions: { value: WatermarkPosition; icon: typeof FiCrosshair }[] = [
-  { value: "top-left", icon: FiArrowUpLeft },
-  { value: "top-center", icon: FiArrowUp },
-  { value: "top-right", icon: FiArrowUpRight },
-  { value: "center-left", icon: FiArrowLeft },
-  { value: "center", icon: FiCrosshair },
-  { value: "center-right", icon: FiArrowRight },
-  { value: "bottom-left", icon: FiArrowDownLeft },
-  { value: "bottom-center", icon: FiArrowDown },
-  { value: "bottom-right", icon: FiArrowDownRight },
+const positions: { value: WatermarkPosition }[] = [
+  { value: "top-left" },
+  { value: "top-center" },
+  { value: "top-right" },
+  { value: "center-left" },
+  { value: "center" },
+  { value: "center-right" },
+  { value: "bottom-left" },
+  { value: "bottom-center" },
+  { value: "bottom-right" },
 ];
 
 function Sidebar({
@@ -122,7 +110,9 @@ function Sidebar({
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
               >
                 {!isPresetFont && (
-                  <option value={settings.fontFamily}>{settings.fontFamily}</option>
+                  <option value={settings.fontFamily}>
+                    {settings.fontFamily}
+                  </option>
                 )}
                 {fonts.map((font) => (
                   <option key={font.value} value={font.value}>
@@ -150,29 +140,35 @@ function Sidebar({
             </div>
 
             <div className="flex gap-2">
-              <button
-                type="button"
-                className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${settings.italic ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
-                onClick={() => onWatermarkChange({ italic: !settings.italic })}
-              >
-                <FaItalic />
-              </button>
-              <button
-                type="button"
-                className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${settings.underline ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
-                onClick={() =>
-                  onWatermarkChange({ underline: !settings.underline })
-                }
-              >
-                <FaUnderline />
-              </button>
+              <div className="flex divide-x divide-zinc-950 overflow-hidden rounded-lg">
+                <button
+                  type="button"
+                  className={`flex h-10 w-10 items-center justify-center border transition-colors ${settings.italic ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
+                  onClick={() =>
+                    onWatermarkChange({ italic: !settings.italic })
+                  }
+                >
+                  <FaItalic />
+                </button>
+                <button
+                  type="button"
+                  className={`flex h-10 w-10 items-center justify-center border transition-colors ${settings.underline ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
+                  onClick={() =>
+                    onWatermarkChange({ underline: !settings.underline })
+                  }
+                >
+                  <FaUnderline />
+                </button>
+              </div>
+
               <button
                 type="button"
                 onClick={() => setIsFontPickerOpen(true)}
                 aria-label="Browse Google Fonts"
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
+                className="flex h-10 items-center gap-2 rounded-lg border border-accent bg-accent/20 px-3 text-white transition-colors hover:bg-accent/30"
               >
-                More Fonts
+                <FaSearch className="size-3.5" />
+                <span>Browse Fonts</span>
               </button>
             </div>
           </div>
@@ -336,17 +332,17 @@ function Sidebar({
 
           <div>
             <label className="text-md mb-2 block font-medium">Position</label>
-            <div className="grid w-fit grid-cols-3 gap-2">
+            <div className="grid w-fit grid-cols-3 gap-2 rounded-lg border border-border bg-zinc-900 p-2">
               {positions.map((item) => (
                 <button
                   key={item.value}
                   type="button"
                   onClick={() => onWatermarkChange({ position: item.value })}
-                  className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${settings.position === item.value ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:bg-zinc-800"}`}
+                  className={`flex size-8 items-center justify-center rounded-lg transition-colors ${settings.position === item.value ? "bg-accent text-black" : "text-zinc-400 hover:bg-zinc-800"}`}
                   aria-label={item.value}
                   aria-pressed={settings.position === item.value}
                 >
-                  <item.icon size={18} />
+                  ●
                 </button>
               ))}
             </div>
