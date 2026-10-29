@@ -15,6 +15,24 @@ body {
   margin: 0;
 }
 
+@keyframes font-picker-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes font-picker-slide-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.font-picker-backdrop {
+  animation: font-picker-fade-in 160ms ease-out;
+}
+
+.font-picker-dialog {
+  animation: font-picker-slide-in 200ms ease-out;
+}
+
 button,
 select,
 input[type="range"] {

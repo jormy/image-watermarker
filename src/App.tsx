@@ -241,6 +241,7 @@ function App() {
           settings={watermarkSettings}
           showMarginGuide={showMarginGuide}
         />
+
         <ThumbnailStrip
           files={files}
           previews={thumbnailUrls}

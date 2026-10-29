@@ -13,6 +13,7 @@ import {
 } from "react-icons/fi";
 import { FaUnderline } from "react-icons/fa";
 import { FaItalic } from "react-icons/fa";
+import FontPicker from "./FontPicker";
 
 type SidebarProps = {
   fileCount: number;
@@ -66,6 +67,8 @@ function Sidebar({
   imageWidth,
 }: SidebarProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
+  const isPresetFont = fonts.some((font) => font.value === settings.fontFamily);
 
   return (
     <aside className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-border p-6">
@@ -118,6 +121,9 @@ function Sidebar({
                 }
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
               >
+                {!isPresetFont && (
+                  <option value={settings.fontFamily}>{settings.fontFamily}</option>
+                )}
                 {fonts.map((font) => (
                   <option key={font.value} value={font.value}>
                     {font.label}
@@ -159,6 +165,14 @@ function Sidebar({
                 }
               >
                 <FaUnderline />
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsFontPickerOpen(true)}
+                aria-label="Browse Google Fonts"
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-medium text-white transition-colors hover:bg-zinc-800"
+              >
+                More Fonts
               </button>
             </div>
           </div>
@@ -339,6 +353,14 @@ function Sidebar({
           </div>
         </div>
       </div>
+      {isFontPickerOpen && (
+        <FontPicker
+          value={settings.fontFamily}
+          previewText={settings.text}
+          onChange={(fontFamily) => onWatermarkChange({ fontFamily })}
+          onClose={() => setIsFontPickerOpen(false)}
+        />
+      )}
     </aside>
   );
 }
