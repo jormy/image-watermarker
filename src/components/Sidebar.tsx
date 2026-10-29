@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { WatermarkPosition, WatermarkSettings } from "../types/watermark";
-import { FaUnderline, FaItalic, FaSearch } from "react-icons/fa";
+import { FaUnderline, FaItalic, FaSearch, FaGoogle } from "react-icons/fa";
 import FontPicker from "./FontPicker";
 
 type SidebarProps = {
@@ -168,7 +168,9 @@ function Sidebar({
                 className="flex h-10 items-center gap-2 rounded-lg border border-accent bg-accent/20 px-3 text-white transition-colors hover:bg-accent/30"
               >
                 <FaSearch className="size-3.5" />
-                <span>Browse Fonts</span>
+                <span className="flex items-center gap-1">
+                  Browse <FaGoogle className="size-3.5" /> Fonts
+                </span>
               </button>
             </div>
           </div>
