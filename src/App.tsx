@@ -270,12 +270,18 @@ function App() {
           }
           onExportAll={() => void exportFiles(files, "all")}
         />
-        <ImagePreview
-          preview={selectedPreview}
-          watermarkImage={watermarkImage}
-          settings={watermarkSettings}
-          showMarginGuide={showMarginGuide}
-        />
+        {files.length === 0 ? (
+          <div className="flex min-h-0 flex-1 items-center justify-center">
+            <img src="/logo.svg" alt="Logo" className="size-40 opacity-20" />
+          </div>
+        ) : (
+          <ImagePreview
+            preview={selectedPreview}
+            watermarkImage={watermarkImage}
+            settings={watermarkSettings}
+            showMarginGuide={showMarginGuide}
+          />
+        )}
 
         <ThumbnailStrip
           files={files}
