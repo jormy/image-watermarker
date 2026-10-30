@@ -667,7 +667,7 @@ function Sidebar({
           />
         )}
 
-        <p className="mt-8 text-center text-sm text-zinc-500">
+        <p className="mt-auto shrink-0 pt-8 text-center text-sm text-zinc-500">
           made with ❤️ & ☕ by{" "}
           <a
             href="https://jorm.lol"
