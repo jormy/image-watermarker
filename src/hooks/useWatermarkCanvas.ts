@@ -6,12 +6,14 @@ import type { WatermarkSettings } from "../types/watermark";
 type UseWatermarkCanvasProps = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   preview: PreviewAsset | undefined;
+  watermarkImage: ImageBitmap | undefined;
   settings: WatermarkSettings;
 };
 
 function useWatermarkCanvas({
   canvasRef,
   preview,
+  watermarkImage,
   settings,
 }: UseWatermarkCanvasProps) {
   useEffect(() => {
@@ -26,10 +28,11 @@ function useWatermarkCanvas({
     renderWatermark({
       canvas,
       image: preview.bitmap,
+      watermarkImage,
       originalDimensions: preview.originalDimensions,
       settings,
     });
-  }, [canvasRef, preview, settings]);
+  }, [canvasRef, preview, settings, watermarkImage]);
 }
 
 export default useWatermarkCanvas;

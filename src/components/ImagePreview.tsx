@@ -5,11 +5,17 @@ import type { WatermarkSettings } from "../types/watermark";
 
 type ImagePreviewProps = {
   preview: PreviewAsset | undefined;
+  watermarkImage: ImageBitmap | undefined;
   settings: WatermarkSettings;
   showMarginGuide: boolean;
 };
 
-function ImagePreview({ preview, settings, showMarginGuide }: ImagePreviewProps) {
+function ImagePreview({
+  preview,
+  watermarkImage,
+  settings,
+  showMarginGuide,
+}: ImagePreviewProps) {
   const previewRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [canvasBounds, setCanvasBounds] = useState({
@@ -46,6 +52,7 @@ function ImagePreview({ preview, settings, showMarginGuide }: ImagePreviewProps)
   useWatermarkCanvas({
     canvasRef,
     preview,
+    watermarkImage,
     settings,
   });
 

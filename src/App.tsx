@@ -14,6 +14,8 @@ function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [thumbnailUrls, setThumbnailUrls] = useState<string[]>([]);
   const thumbnailCache = useRef(new Map<File, string>());
+  const [watermarkFile, setWatermarkFile] = useState<File | null>(null);
+  const [watermarkImage, setWatermarkImage] = useState<ImageBitmap>();
   const previewCache = useRef(new Map<File, PreviewAsset>());
   const [previewAssets, setPreviewAssets] = useState<Map<File, PreviewAsset>>(
     new Map(),
@@ -33,6 +35,10 @@ function App() {
       position: "bottom-right",
       margin: 10,
       rotation: 0,
+      imageSizeMode: "percentage",
+      imageSizeValue: 50,
+      imageOpacity: 50,
+      imageBlendMode: "source-over",
     },
   );
   const updateWatermarkSettings = (updates: Partial<WatermarkSettings>) => {
@@ -126,7 +132,7 @@ function App() {
 
     try {
       for (const file of filesToExport) {
-        await exportImage(file, watermarkSettings, exportFormat);
+        await exportImage(file, watermarkSettings, exportFormat, watermarkFile);
       }
     } catch (error) {
       console.error("Failed to export image:", error);
@@ -186,6 +192,31 @@ function App() {
   }, [files]);
 
   useEffect(() => {
+    let cancelled = false;
+    let bitmap: ImageBitmap | undefined;
+
+    if (!watermarkFile) {
+      setWatermarkImage(undefined);
+      return;
+    }
+
+    void createImageBitmap(watermarkFile).then((createdBitmap) => {
+      if (cancelled) {
+        createdBitmap.close();
+        return;
+      }
+
+      bitmap = createdBitmap;
+      setWatermarkImage(createdBitmap);
+    });
+
+    return () => {
+      cancelled = true;
+      bitmap?.close();
+    };
+  }, [watermarkFile]);
+
+  useEffect(() => {
     const thumbnailUrls = thumbnailCache.current;
     const previewAssets = previewCache.current;
 
@@ -221,6 +252,9 @@ function App() {
           }
         }}
         imageWidth={selectedPreview?.originalDimensions.width}
+        watermarkFile={watermarkFile}
+        watermarkImageWidth={watermarkImage?.width}
+        onWatermarkFileChange={setWatermarkFile}
       />
       <section className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Toolbar
@@ -238,6 +272,7 @@ function App() {
         />
         <ImagePreview
           preview={selectedPreview}
+          watermarkImage={watermarkImage}
           settings={watermarkSettings}
           showMarginGuide={showMarginGuide}
         />

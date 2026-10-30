@@ -9,6 +9,9 @@ type SidebarProps = {
   onAddFiles: (files: File[]) => void;
   onWatermarkChange: (updates: Partial<WatermarkSettings>) => void;
   imageWidth: number | undefined;
+  watermarkFile: File | null;
+  watermarkImageWidth: number | undefined;
+  onWatermarkFileChange: (file: File | null) => void;
 };
 
 const fonts = [
@@ -47,20 +50,33 @@ const positions: { value: WatermarkPosition }[] = [
   { value: "bottom-right" },
 ];
 
+const MIN_SIDEBAR_WIDTH = 384;
+const MAX_SIDEBAR_WIDTH = 640;
+
 function Sidebar({
   fileCount,
   settings,
   onAddFiles,
   onWatermarkChange,
   imageWidth,
+  watermarkFile,
+  watermarkImageWidth,
+  onWatermarkFileChange,
 }: SidebarProps) {
   const [isDragging, setIsDragging] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(MIN_SIDEBAR_WIDTH);
+  const [isResizing, setIsResizing] = useState(false);
   const [isFontPickerOpen, setIsFontPickerOpen] = useState(false);
+  const watermarkMode = settings.type;
   const isPresetFont = fonts.some((font) => font.value === settings.fontFamily);
 
   return (
-    <aside className="flex w-96 shrink-0 flex-col overflow-y-auto border-r border-border p-6">
-      <div>
+    <div
+      style={{ width: sidebarWidth }}
+      className={`relative shrink-0 ${isResizing ? "select-none" : ""}`}
+    >
+      <aside className="flex h-full w-full scrollbar-gutter-stable flex-col overflow-y-auto border-r border-border p-6">
+        <div>
         <div className="flex items-center gap-3">
           <img src="/favicon.svg" alt="Logo" className="size-8" />
           <h1 className="text-3xl font-semibold tracking-tight">
@@ -96,270 +112,606 @@ function Sidebar({
         </label>
         <p className="mt-2 text-zinc-400">{fileCount} file(s) selected.</p>
 
-        <div className="mt-6 grid grid-cols-1 gap-4">
-          <div>
-            <label className="text-md mb-2 block font-medium">
-              Font Family
-            </label>
-            <div className="mb-2 flex gap-2">
-              <select
-                value={settings.fontFamily}
-                onChange={(event) =>
-                  onWatermarkChange({ fontFamily: event.target.value })
-                }
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
-              >
-                {!isPresetFont && (
-                  <option value={settings.fontFamily}>
-                    {settings.fontFamily}
-                  </option>
-                )}
-                {fonts.map((font) => (
-                  <option key={font.value} value={font.value}>
-                    {font.label}
-                  </option>
-                ))}
-              </select>
+        <div
+          className="relative mt-6 flex rounded-xl border border-border bg-zinc-900 p-1.5"
+          role="group"
+        >
+          <span
+            aria-hidden="true"
+            className={`absolute inset-y-1.5 left-1.5 w-[calc(50%-0.375rem)] rounded-md bg-accent transition-transform duration-200 ease-out ${watermarkMode === "image" ? "translate-x-full" : "translate-x-0"}`}
+          />
+          <button
+            type="button"
+            onClick={() => onWatermarkChange({ type: "text" })}
+            aria-pressed={watermarkMode === "text"}
+            className={`relative z-10 flex-1 rounded-md px-3 py-1.5 text-sm font-bold uppercase transition-colors ${watermarkMode === "text" ? "text-zinc-950" : "text-zinc-400 hover:text-white"}`}
+          >
+            Text
+          </button>
+          <button
+            type="button"
+            onClick={() => onWatermarkChange({ type: "image" })}
+            aria-pressed={watermarkMode === "image"}
+            className={`relative z-10 flex-1 rounded-md px-3 py-1.5 text-sm font-bold uppercase transition-colors ${watermarkMode === "image" ? "text-zinc-950" : "text-zinc-400 hover:text-white"}`}
+          >
+            Image
+          </button>
+        </div>
 
-              <select
-                value={settings.fontWeight}
-                onChange={(event) =>
-                  onWatermarkChange({
-                    fontWeight: event.target
-                      .value as WatermarkSettings["fontWeight"],
-                  })
-                }
-                className="rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
-              >
-                {fontWeights.map((weight) => (
-                  <option key={weight.value} value={weight.value}>
-                    {weight.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+        <div
+          className={`watermark-settings-panel watermark-settings-panel-text ${watermarkMode === "text" ? "watermark-settings-panel-visible" : "watermark-settings-panel-hidden"}`}
+        >
+          <div className="mt-6 grid grid-cols-1 gap-4">
+            <div>
+              <label className="text-md mb-2 block font-medium">
+                Font Family
+              </label>
+              <div className="mb-2 flex gap-2">
+                <select
+                  value={settings.fontFamily}
+                  onChange={(event) =>
+                    onWatermarkChange({ fontFamily: event.target.value })
+                  }
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
+                >
+                  {!isPresetFont && (
+                    <option value={settings.fontFamily}>
+                      {settings.fontFamily}
+                    </option>
+                  )}
+                  {fonts.map((font) => (
+                    <option key={font.value} value={font.value}>
+                      {font.label}
+                    </option>
+                  ))}
+                </select>
 
-            <div className="flex gap-2">
-              <div className="flex divide-x divide-zinc-950 overflow-hidden rounded-lg">
+                <select
+                  value={settings.fontWeight}
+                  onChange={(event) =>
+                    onWatermarkChange({
+                      fontWeight: event.target
+                        .value as WatermarkSettings["fontWeight"],
+                    })
+                  }
+                  className="rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
+                >
+                  {fontWeights.map((weight) => (
+                    <option key={weight.value} value={weight.value}>
+                      {weight.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="flex divide-x divide-zinc-950 overflow-hidden rounded-lg">
+                  <button
+                    type="button"
+                    className={`flex h-10 w-10 items-center justify-center border transition-colors ${settings.italic ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
+                    onClick={() =>
+                      onWatermarkChange({ italic: !settings.italic })
+                    }
+                  >
+                    <FaItalic />
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex h-10 w-10 items-center justify-center border transition-colors ${settings.underline ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
+                    onClick={() =>
+                      onWatermarkChange({ underline: !settings.underline })
+                    }
+                  >
+                    <FaUnderline />
+                  </button>
+                </div>
+
                 <button
                   type="button"
-                  className={`flex h-10 w-10 items-center justify-center border transition-colors ${settings.italic ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
-                  onClick={() =>
-                    onWatermarkChange({ italic: !settings.italic })
-                  }
+                  onClick={() => setIsFontPickerOpen(true)}
+                  aria-label="Browse Google Fonts"
+                  className="flex h-10 items-center gap-2 rounded-lg border border-accent bg-accent/20 px-3 text-white transition-colors hover:bg-accent/30"
                 >
-                  <FaItalic />
+                  <FaSearch className="size-3.5" />
+                  <span className="flex items-center gap-1">
+                    Browse <FaGoogle className="size-3.5" /> Fonts
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-md mb-2 block font-medium">Text</label>
+              <input
+                type="text"
+                value={settings.text}
+                onChange={(event) =>
+                  onWatermarkChange({ text: event.target.value })
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-md mb-2 block font-medium">
+                Font Size
+              </label>
+              <div className="mb-2 flex gap-2">
+                <button
+                  type="button"
+                  className={`flex-1 rounded-md px-2 py-1 transition ${settings.fontSizeMode === "px" ? "bg-accent text-zinc-950" : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white"}`}
+                  onClick={() => {
+                    if (settings.fontSizeMode === "px") return;
+                    const newFontSize = imageWidth
+                      ? Math.round((settings.fontSize / 100) * imageWidth)
+                      : settings.fontSize;
+
+                    onWatermarkChange({
+                      fontSizeMode: "px",
+                      fontSize: Math.min(500, Math.max(10, newFontSize)),
+                    });
+                  }}
+                >
+                  px
                 </button>
                 <button
                   type="button"
-                  className={`flex h-10 w-10 items-center justify-center border transition-colors ${settings.underline ? "border-accent bg-accent text-black" : "border-zinc-700 bg-zinc-900 hover:bg-zinc-800"}`}
-                  onClick={() =>
-                    onWatermarkChange({ underline: !settings.underline })
-                  }
+                  className={`flex-1 rounded-md px-2 py-1 transition ${settings.fontSizeMode === "percentage" ? "bg-accent text-zinc-950" : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white"}`}
+                  onClick={() => {
+                    if (settings.fontSizeMode === "percentage") return;
+                    const newFontSize = imageWidth
+                      ? Math.round(
+                          (settings.fontSize / imageWidth) * 100 * 100,
+                        ) / 100
+                      : settings.fontSize;
+
+                    onWatermarkChange({
+                      fontSizeMode: "percentage",
+                      fontSize: Math.min(100, Math.max(1, newFontSize)),
+                    });
+                  }}
                 >
-                  <FaUnderline />
+                  %
                 </button>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsFontPickerOpen(true)}
-                aria-label="Browse Google Fonts"
-                className="flex h-10 items-center gap-2 rounded-lg border border-accent bg-accent/20 px-3 text-white transition-colors hover:bg-accent/30"
-              >
-                <FaSearch className="size-3.5" />
-                <span className="flex items-center gap-1">
-                  Browse <FaGoogle className="size-3.5" /> Fonts
-                </span>
-              </button>
-            </div>
-          </div>
-
-          <div>
-            <label className="text-md mb-2 block font-medium">Text</label>
-            <input
-              type="text"
-              value={settings.text}
-              onChange={(event) =>
-                onWatermarkChange({ text: event.target.value })
-              }
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
-            />
-          </div>
-
-          <div>
-            <label className="text-md mb-2 block font-medium">Font Size</label>
-            <div className="mb-2 flex gap-2">
-              <button
-                type="button"
-                className={`flex-1 rounded-md px-2 py-1 transition ${settings.fontSizeMode === "px" ? "bg-accent text-zinc-950" : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white"}`}
-                onClick={() => {
-                  if (settings.fontSizeMode === "px") return;
-                  const newFontSize = imageWidth
-                    ? Math.round((settings.fontSize / 100) * imageWidth)
-                    : settings.fontSize;
-
-                  onWatermarkChange({
-                    fontSizeMode: "px",
-                    fontSize: Math.min(500, Math.max(10, newFontSize)),
-                  });
-                }}
-              >
-                px
-              </button>
-              <button
-                type="button"
-                className={`flex-1 rounded-md px-2 py-1 transition ${settings.fontSizeMode === "percentage" ? "bg-accent text-zinc-950" : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white"}`}
-                onClick={() => {
-                  if (settings.fontSizeMode === "percentage") return;
-                  const newFontSize = imageWidth
-                    ? Math.round((settings.fontSize / imageWidth) * 100 * 100) /
-                      100
-                    : settings.fontSize;
-
-                  onWatermarkChange({
-                    fontSizeMode: "percentage",
-                    fontSize: Math.min(100, Math.max(1, newFontSize)),
-                  });
-                }}
-              >
-                %
-              </button>
+              <div className="flex gap-2">
+                <div>
+                  <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={settings.fontSize}
+                      onChange={(event) =>
+                        onWatermarkChange({
+                          fontSize: Number(event.target.value),
+                        })
+                      }
+                      className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
+                    />
+                    <span className="pr-2 text-zinc-400">
+                      {settings.fontSizeMode === "px" ? "px" : "%"}
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="range"
+                  min={settings.fontSizeMode === "px" ? "10" : "1"}
+                  max={settings.fontSizeMode === "px" ? "500" : "100"}
+                  step="0.01"
+                  value={settings.fontSize}
+                  onChange={(event) =>
+                    onWatermarkChange({
+                      fontSize: Number(event.target.value),
+                    })
+                  }
+                  className="w-full accent-accent"
+                />
+              </div>
             </div>
 
-            <div className="flex gap-2">
-              <div>
+            <div>
+              <label className="text-md mb-2 block font-medium">Opacity</label>
+              <div className="flex gap-2">
                 <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
                   <input
                     type="number"
                     step="0.01"
-                    value={settings.fontSize}
+                    value={String(settings.opacity).replace(/^0+(?=\d)/, "")}
                     onChange={(event) =>
                       onWatermarkChange({
-                        fontSize: Number(event.target.value),
+                        opacity: Number(event.target.value),
+                      })
+                    }
+                    className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
+                  />
+                  <span className="pr-2 text-zinc-400">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="100"
+                  step="0.01"
+                  value={settings.opacity}
+                  onChange={(event) =>
+                    onWatermarkChange({ opacity: Number(event.target.value) })
+                  }
+                  className="w-full accent-accent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-md mb-2 block font-medium">Color</label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={settings.color}
+                  onChange={(event) =>
+                    onWatermarkChange({
+                      color: event.target.value.startsWith("#")
+                        ? event.target.value
+                        : `#${event.target.value}`,
+                    })
+                  }
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
+                ></input>
+                <input
+                  type="color"
+                  value={settings.color}
+                  onChange={(event) =>
+                    onWatermarkChange({ color: event.target.value })
+                  }
+                  className="h-10 w-14 rounded-lg border-0 bg-transparent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-md mb-2 block font-medium">Margin</label>
+              <div className="flex gap-2">
+                <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
+                  <input
+                    type="number"
+                    step="0.01"
+                    max="15"
+                    value={String(settings.margin).replace(/^0+(?=\d)/, "")}
+                    onChange={(event) =>
+                      onWatermarkChange({
+                        margin: Number(event.target.value),
+                      })
+                    }
+                    className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
+                  />
+                  <span className="pr-2 text-zinc-400">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="15"
+                  step="0.01"
+                  value={settings.margin}
+                  onChange={(event) =>
+                    onWatermarkChange({ margin: Number(event.target.value) })
+                  }
+                  className="w-full accent-accent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-md mb-2 block font-medium">Position</label>
+              <div className="grid w-fit grid-cols-3 gap-2 rounded-xl border border-border bg-zinc-900 p-1.5">
+                {positions.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => onWatermarkChange({ position: item.value })}
+                    className={`flex size-8 items-center justify-center rounded-lg transition-colors ${settings.position === item.value ? "bg-accent text-black" : "text-zinc-400 hover:bg-zinc-800"}`}
+                    aria-label={item.value}
+                    aria-pressed={settings.position === item.value}
+                  >
+                    ●
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          className={`watermark-settings-panel watermark-settings-panel-image ${watermarkMode === "image" ? "watermark-settings-panel-visible" : "watermark-settings-panel-hidden"}`}
+        >
+          <div className="mt-6 grid grid-cols-1 gap-4">
+            <div>
+              <label className="text-md mb-2 block font-medium">
+                Watermark Image
+              </label>
+              <div className="flex items-center justify-between rounded-xl border border-border bg-zinc-900 p-1.5">
+                <span className="ml-2 truncate text-sm text-zinc-400">
+                  {watermarkFile ? watermarkFile.name : "No image selected"}
+                </span>
+                <label className="ml-2 shrink-0 cursor-pointer rounded-lg border border-accent bg-accent/20 px-3 py-1.5 text-sm transition hover:bg-accent/30">
+                  Browse
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(event) => {
+                      onWatermarkFileChange(event.target.files?.[0] ?? null);
+                      event.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-md mb-2 block font-medium">Scale</label>
+              <div className="mb-2 flex gap-2">
+                <button
+                  type="button"
+                  className={`flex-1 rounded-md px-2 py-1 transition ${settings.imageSizeMode === "pixels" ? "bg-accent text-zinc-950" : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white"}`}
+                  onClick={() => {
+                    if (settings.imageSizeMode === "pixels") return;
+                    const pixelWidth = imageWidth
+                      ? Math.round((settings.imageSizeValue / 100) * imageWidth)
+                      : settings.imageSizeValue;
+
+                    onWatermarkChange({
+                      imageSizeMode: "pixels",
+                      imageSizeValue: Math.min(
+                        watermarkImageWidth ?? pixelWidth,
+                        Math.max(1, pixelWidth),
+                      ),
+                    });
+                  }}
+                >
+                  px
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 rounded-md px-2 py-1 transition ${settings.imageSizeMode === "percentage" ? "bg-accent text-zinc-950" : "border border-zinc-700 bg-zinc-900 text-zinc-400 hover:text-white"}`}
+                  onClick={() => {
+                    if (settings.imageSizeMode === "percentage") return;
+                    const percentage = imageWidth
+                      ? Math.round(
+                          (settings.imageSizeValue / imageWidth) * 100 * 100,
+                        ) / 100
+                      : settings.imageSizeValue;
+
+                    onWatermarkChange({
+                      imageSizeMode: "percentage",
+                      imageSizeValue: Math.min(100, Math.max(1, percentage)),
+                    });
+                  }}
+                >
+                  %
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
+                  <input
+                    type="number"
+                    min={1}
+                    max={
+                      settings.imageSizeMode === "pixels"
+                        ? (watermarkImageWidth ?? 500)
+                        : 100
+                    }
+                    step="0.01"
+                    value={settings.imageSizeValue}
+                    onChange={(event) =>
+                      onWatermarkChange({
+                        imageSizeValue: Number(event.target.value),
                       })
                     }
                     className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
                   />
                   <span className="pr-2 text-zinc-400">
-                    {settings.fontSizeMode === "px" ? "px" : "%"}
+                    {settings.imageSizeMode === "pixels" ? "px" : "%"}
                   </span>
                 </div>
-              </div>
-              <input
-                type="range"
-                min={settings.fontSizeMode === "px" ? "10" : "1"}
-                max={settings.fontSizeMode === "px" ? "500" : "100"}
-                step="0.01"
-                value={settings.fontSize}
-                onChange={(event) =>
-                  onWatermarkChange({ fontSize: Number(event.target.value) })
-                }
-                className="w-full accent-accent"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-md mb-2 block font-medium">Opacity</label>
-            <div className="flex gap-2">
-              <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
                 <input
-                  type="number"
-                  step="0.01"
-                  value={String(settings.opacity).replace(/^0+(?=\d)/, "")}
-                  onChange={(event) =>
-                    onWatermarkChange({ opacity: Number(event.target.value) })
+                  type="range"
+                  min={settings.imageSizeMode === "pixels" ? "10" : "1"}
+                  max={
+                    settings.imageSizeMode === "pixels"
+                      ? String(watermarkImageWidth ?? 500)
+                      : "100"
                   }
-                  className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
+                  step="0.01"
+                  value={settings.imageSizeValue}
+                  onChange={(event) =>
+                    onWatermarkChange({
+                      imageSizeValue: Number(event.target.value),
+                    })
+                  }
+                  className="w-full accent-accent"
                 />
-                <span className="pr-2 text-zinc-400">%</span>
               </div>
-              <input
-                type="range"
-                min="1"
-                max="100"
-                step="0.01"
-                value={settings.opacity}
-                onChange={(event) =>
-                  onWatermarkChange({ opacity: Number(event.target.value) })
-                }
-                className="w-full accent-accent"
-              />
             </div>
-          </div>
 
-          <div>
-            <label className="text-md mb-2 block font-medium">Color</label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={settings.color}
+            <div>
+              <label className="text-md mb-2 block font-medium">Opacity</label>
+              <div className="flex gap-2">
+                <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={String(settings.imageOpacity).replace(
+                      /^0+(?=\d)/,
+                      "",
+                    )}
+                    onChange={(event) =>
+                      onWatermarkChange({
+                        imageOpacity: Number(event.target.value),
+                      })
+                    }
+                    className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
+                  />
+                  <span className="pr-2 text-zinc-400">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  value={settings.imageOpacity}
+                  onChange={(event) =>
+                    onWatermarkChange({
+                      imageOpacity: Number(event.target.value),
+                    })
+                  }
+                  className="w-full accent-accent"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                htmlFor="image-blend-mode"
+                className="text-md mb-2 block font-medium"
+              >
+                Blend Mode
+              </label>
+              <select
+                id="image-blend-mode"
+                value={settings.imageBlendMode}
                 onChange={(event) =>
                   onWatermarkChange({
-                    color: event.target.value.startsWith("#")
-                      ? event.target.value
-                      : `#${event.target.value}`,
+                    imageBlendMode: event.target
+                      .value as WatermarkSettings["imageBlendMode"],
                   })
                 }
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 p-2 text-white outline-none focus:border-zinc-500"
-              ></input>
-              <input
-                type="color"
-                value={settings.color}
-                onChange={(event) =>
-                  onWatermarkChange({ color: event.target.value })
-                }
-                className="h-10 w-14 rounded-lg border-0 bg-transparent"
-              />
+              >
+                <option value="source-over">Normal</option>
+                <option value="multiply">Multiply</option>
+                <option value="screen">Screen</option>
+                <option value="overlay">Overlay</option>
+                <option value="darken">Darken</option>
+                <option value="lighten">Lighten</option>
+                <option value="color-dodge">Color Dodge</option>
+                <option value="color-burn">Color Burn</option>
+                <option value="hard-light">Hard Light</option>
+                <option value="soft-light">Soft Light</option>
+                <option value="difference">Difference</option>
+                <option value="exclusion">Exclusion</option>
+                <option value="hue">Hue</option>
+                <option value="saturation">Saturation</option>
+                <option value="color">Color</option>
+                <option value="luminosity">Luminosity</option>
+              </select>
             </div>
-          </div>
+            <div>
+              <label className="text-md mb-2 block font-medium">
+                Margin: {settings.margin}%
+              </label>
+              <div className="flex gap-2">
+                <div className="flex w-25 items-center rounded-lg border border-zinc-700 bg-zinc-900 focus-within:border-zinc-500">
+                  <input
+                    type="number"
+                    step="0.01"
+                    max="15"
+                    value={String(settings.margin).replace(/^0+(?=\d)/, "")}
+                    onChange={(event) =>
+                      onWatermarkChange({
+                        margin: Number(event.target.value),
+                      })
+                    }
+                    className="no-spinner min-w-0 flex-1 bg-transparent p-2 text-white outline-none"
+                  />
+                  <span className="pr-2 text-zinc-400">%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="15"
+                  step="0.01"
+                  value={settings.margin}
+                  onChange={(event) =>
+                    onWatermarkChange({ margin: Number(event.target.value) })
+                  }
+                  className="w-full accent-accent"
+                />
+              </div>
+            </div>
 
-          <div>
-            <label className="text-md mb-2 block font-medium">
-              Margin: {settings.margin}%
-            </label>
-            <input
-              type="range"
-              min="0"
-              max="15"
-              step="0.01"
-              value={settings.margin}
-              onChange={(event) =>
-                onWatermarkChange({ margin: Number(event.target.value) })
-              }
-              className="w-full accent-accent"
-            />
-          </div>
-
-          <div>
-            <label className="text-md mb-2 block font-medium">Position</label>
-            <div className="grid w-fit grid-cols-3 gap-2 rounded-lg border border-border bg-zinc-900 p-2">
-              {positions.map((item) => (
-                <button
-                  key={item.value}
-                  type="button"
-                  onClick={() => onWatermarkChange({ position: item.value })}
-                  className={`flex size-8 items-center justify-center rounded-lg transition-colors ${settings.position === item.value ? "bg-accent text-black" : "text-zinc-400 hover:bg-zinc-800"}`}
-                  aria-label={item.value}
-                  aria-pressed={settings.position === item.value}
-                >
-                  ●
-                </button>
-              ))}
+            <div>
+              <label className="text-md mb-2 block font-medium">Position</label>
+              <div className="grid w-fit grid-cols-3 gap-2 rounded-xl border border-border bg-zinc-900 p-1.5">
+                {positions.map((item) => (
+                  <button
+                    key={item.value}
+                    type="button"
+                    onClick={() => onWatermarkChange({ position: item.value })}
+                    className={`flex size-8 items-center justify-center rounded-lg transition-colors ${settings.position === item.value ? "bg-accent text-black" : "text-zinc-400 hover:bg-zinc-800"}`}
+                    aria-label={item.value}
+                    aria-pressed={settings.position === item.value}
+                  >
+                    ●
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      {isFontPickerOpen && (
-        <FontPicker
-          value={settings.fontFamily}
-          previewText={settings.text}
-          onChange={(fontFamily) => onWatermarkChange({ fontFamily })}
-          onClose={() => setIsFontPickerOpen(false)}
+        </div>
+        {isFontPickerOpen && (
+          <FontPicker
+            value={settings.fontFamily}
+            previewText={settings.text}
+            onChange={(fontFamily) => onWatermarkChange({ fontFamily })}
+            onClose={() => setIsFontPickerOpen(false)}
+          />
+        )}
+
+        <p className="mt-8 text-center text-sm text-zinc-500">
+          made with ❤️ & ☕ by{" "}
+          <a
+            href="https://jorm.lol"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline"
+          >
+            jorm
+          </a>
+        </p>
+      </aside>
+      <div
+        role="separator"
+        aria-label="Resize sidebar"
+        aria-orientation="vertical"
+        aria-valuemin={MIN_SIDEBAR_WIDTH}
+        aria-valuemax={MAX_SIDEBAR_WIDTH}
+        aria-valuenow={sidebarWidth}
+        tabIndex={0}
+        onPointerDown={(event) => {
+          event.currentTarget.setPointerCapture(event.pointerId);
+          setIsResizing(true);
+        }}
+        onPointerMove={(event) => {
+          if (!isResizing) return;
+          setSidebarWidth(
+            Math.min(
+              MAX_SIDEBAR_WIDTH,
+              Math.max(MIN_SIDEBAR_WIDTH, event.clientX),
+            ),
+          );
+        }}
+        onPointerUp={(event) => {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+          setIsResizing(false);
+        }}
+        onPointerCancel={() => setIsResizing(false)}
+        className="group absolute inset-y-0 -right-1.5 z-10 flex w-3 cursor-col-resize items-center justify-center border-l border-border bg-zinc-950"
+      >
+        <div
+          className={`h-12 w-1 rounded-full transition-colors ${isResizing ? "bg-accent" : "bg-border group-hover:bg-accent"}`}
         />
-      )}
-    </aside>
+      </div>
+    </div>
   );
 }
 

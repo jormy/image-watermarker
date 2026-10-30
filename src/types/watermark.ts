@@ -24,4 +24,28 @@ export type WatermarkSettings = {
   position: WatermarkPosition;
   margin: number;
   rotation: number;
+  imageSizeMode: ImageSizeMode;
+  imageSizeValue: number;
+  imageOpacity: number;
+  imageBlendMode: ImageBlendMode;
 };
+
+export type ImageSizeMode = "percentage" | "pixels";
+
+export type ImageBlendMode =
+  | "source-over"
+  | "multiply"
+  | "screen"
+  | "overlay"
+  | "darken"
+  | "lighten"
+  | "color-dodge"
+  | "color-burn"
+  | "hard-light"
+  | "soft-light"
+  | "difference"
+  | "exclusion"
+  | "hue"
+  | "saturation"
+  | "color"
+  | "luminosity";

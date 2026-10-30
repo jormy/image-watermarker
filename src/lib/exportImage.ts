@@ -56,14 +56,20 @@ async function exportImage(
   file: File,
   settings: WatermarkSettings,
   format: ExportFormat,
+  watermarkFile: File | null,
 ) {
   const image = await createImageBitmap(file);
+  const watermarkImage =
+    settings.type === "image" && watermarkFile
+      ? await createImageBitmap(watermarkFile)
+      : undefined;
 
   try {
     const canvas = document.createElement("canvas");
     renderWatermark({
       canvas,
       image,
+      watermarkImage,
       originalDimensions: { width: image.width, height: image.height },
       settings,
     });
@@ -75,6 +81,7 @@ async function exportImage(
     );
   } finally {
     image.close();
+    watermarkImage?.close();
   }
 }
 
